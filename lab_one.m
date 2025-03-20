@@ -1,6 +1,5 @@
 clc; clear; close all;
 
-% Δεδομένα του προβλήματος
 m = 0.75;
 L = 1.25;
 c = 0.15;
@@ -8,34 +7,30 @@ g = 9.81;
 A0 = 4;
 omega = 2;
 
-% Ορισμός του συστήματος εξισώσεων
 A = [0 1; -g/L -c/(m*L^2)];
 B = [0; 1/(m*L^2)];
-x0 = [0; 0]; % Αρχικές συνθήκες
+x0 = [0; 0]; 
 
-% Χρονική προσομοίωση
-dt = 1e-3;
+dt = 1e-4;
 tspan = 0:dt:20;
 
-% Συνάρτηση εισόδου
 u = @(t) A0 * sin(omega * t);
 
-% Συνάρτηση για τον ODE Solver
-dxdt = @(t, x) A*x + B*u(t);
+xdot = @(t, x) A*x + B*u(t);
+[t, X] = ode45(xdot, tspan, x0);
 
-% Επίλυση με ODE45
-[t, X] = ode45(dxdt, tspan, x0);
-
-% Διαγράμματα
 figure;
 subplot(2,1,1);
-plot(t, X(:,1), 'b', 'LineWidth', 1.5);
-xlabel('Χρόνος [sec]'); ylabel('q(t) [rad]');
-title('Γωνία εκτροπής q(t)');
+plot(t, X(:,1), 'b', 'LineWidth', 2);
+xlabel('Time [sec]'); 
+ylabel('q(t) [rad]');
+title('Deflection Angle q(t)');
 grid on;
 
 subplot(2,1,2);
-plot(t, X(:,2), 'r', 'LineWidth', 1.5);
-xlabel('Χρόνος [sec]'); ylabel('dq/dt [rad/sec]');
-title('Γωνιακή ταχύτητα dq/dt');
+plot(t, X(:,2), 'r', 'LineWidth', 2);
+xlabel('Time [sec]'); 
+ylabel('$\dot{q}$ [rad/sec]', 'Interpreter', 'latex');
+title('Angular Velocity $\dot{q}(t)$', 'Interpreter', 'latex');
 grid on;
+
