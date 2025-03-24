@@ -24,6 +24,7 @@ xdot = @(t, x) A*x + B*u(t);
 
 q = X(:,1);
 qdot = X(:,2);
+
 figure;
 subplot(2,1,1);
 plot(t, q, 'b', 'LineWidth', 2);
