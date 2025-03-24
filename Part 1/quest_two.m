@@ -7,6 +7,7 @@ c = 0.15;
 g = 9.81;
 A0 = 4;
 omega = 2;
+x0 = [0; 0];
 
 % System Dynamics
 A = [0 1; -g/L -c/(m*L^2)];
@@ -19,12 +20,10 @@ t_cont = 0:dt:20;
 
 u = @(t) A0 * sin(omega * t);
 xdot = @(t, x) A*x + B*u(t);
-[t_cont, X] = ode45(xdot, t_cont, [0; 0]);
-
+[t_cont, X] = ode45(xdot, t_cont, x0);
 q = X(:,1);
 qdot = X(:,2);
 
-% add custom function
 q_samples = interp1(t_cont, q, t_sim);
 qdot_samples = interp1(t_cont, qdot, t_sim);
 qddot_samples = gradient(qdot_samples, T_sample);
@@ -63,15 +62,15 @@ title('Control Input u(t)');
 grid on;
 
 
-% ========================
-% Estimation with only q(t) and u(t)
-% ========================
-Phi2 = [q_samples(2:end-1)' q_samples(1:end-2)' u_samples(2:end-1)'];
-y2 = q_samples(3:end)';
+% % ========================
+% % Estimation with only q(t) and u(t)
+% % ========================
+% Phi2 = [q_samples(2:end-1)' q_samples(1:end-2)' u_samples(2:end-1)'];
+% y2 = q_samples(3:end)';
 
-theta2 = (Phi2' * Phi2) \ (Phi2' * y2);
+% theta2 = (Phi2' * Phi2) \ (Phi2' * y2);
 
-fprintf('\nEstimation with only q(t) and u(t):\n');
-fprintf('L_est2 = %.4f m\n', g/theta2(1));
+% fprintf('\nEstimation with only q(t) and u(t):\n');
+% fprintf('L_est2 = %.4f m\n', g/theta2(1));
 
 
