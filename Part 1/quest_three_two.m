@@ -1,27 +1,27 @@
 clc; clear; close all;
 
-%% Ορισμός παραμέτρων του συστήματος
+% System Parameters
 m = 0.75; 
 L = 1.25; 
 c = 0.15; 
 g = 9.81;
 A0 = 4; 
 omega = 2;
-T_sim = 20;  % Συνολικός χρόνος προσομοίωσης
-Ts = 0.1;    % Περίοδος δειγματοληψίας
+T_sim = 20;  % Simulatoin time
+T_samp = 0.1;    % Sampling time
 
-%% Διαφορικές εξισώσεις του συστήματος
+% Systems Dynamics
 A = [0 1; -g/L -c/(m*L^2)];
 B = [0; 1/(m*L^2)];
-x0 = [0; 0];  % Αρχικές συνθήκες
+x0 = [0; 0];  % Initial conditions  
 
-%% Προσομοίωση με ODE45
-tspan = 0:Ts:T_sim;
+% Simulation
+tspan = 0:T_samp:T_sim;
 [t, x] = ode45(@(t, x) pendulumODE(t, x, A, B, A0, omega), tspan, x0);
 
-q_clean = x(:,1);  % Γωνία q(t) χωρίς θόρυβο
-dq_clean = x(:,2); % Γωνιακή ταχύτητα χωρίς θόρυβο
-ddq_clean = gradient(dq_clean, Ts);  % Δεύτερη παράγωγος
+q = x(:,1);  % Angular position
+qdot = x(:,2); % Angular velocity
+qddot = gradient(dq_clean, Ts);  % Angular acceleration
 
 %% Προσθήκη λευκού γκαουσιανού θορύβου
 noise_level = 0.02; % Επίπεδο θορύβου
