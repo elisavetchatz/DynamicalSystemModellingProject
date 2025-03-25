@@ -1,32 +1,36 @@
-function estimations = least_squares_estimation(X)
-    %X = [q, qdot, u]
+function [estimations, model] = least_squares_estimation(y, time)
 
     g = 9.81;
+    % Λ(s) = (s+1)^2
+    syms s
+    lamda = sym2poly((s+1)^2);
 
-    % Parameter estimation
-    Phi = [X(2:end-1,1) X(1:end-2,1) X(2:end-1,2)];
-    y = X(3:end,1);
+    D1 = tf([-1 0], lamda);
+    D2 = tf([0 -1], lamda);  
+    D3 = tf([0 1], lamda);
+
+    % Regression Matrix
+    phi1 = lsim(D1, y, time);
+    phi2 = lsim(D2, y, time);
+    phi3 = lsim(D3, u_syms(time), time);
+    Phi = [phi1 phi2 phi3];
+
     theta = (Phi' * Phi) \ (Phi' * y);
 
-    L_est = g / theta(1);
-    mL2_est = 1 / theta(3);
-    c_est = theta(2) * mL2_est;
-    m_est = mL2_est / (L_est^2);
-
-    A_est = [0 1; -g/L_est -c_est/(m_est*L_est^2)];
-    B_est = [0; 1/(m_est*L_est^2)];
-    dxdt_est = @(t, x) A_est*x + B_est*X(t,2);
-    [t_cont, X_est] = ode45(dxdt_est, 0:1e-5:20, [0; 0]);
-
-    q_est = X_est(:,1);
-    qdot_est = X_est(:,2);
-
-    error_est = y - q_est;
+    % Parameter Estimation
+    L = g / theta(1);
+    mL2 = 1 / theta(3);
+    c = theta(2) * mL2;
+    m = mL2 / (L^2);
 
     fprintf('Parameter Estimation:\n');
-    fprintf('L_est = %.4f m\n', L_est);
-    fprintf('m_est = %.4f kg\n', m_est);    
-    fprintf('c_est = %.4f Nm/sec\n', c_est);
+    fprintf('L_est = %.4f m\n', L);
+    fprintf('m_est = %.4f kg\n', m);    
+    fprintf('c_est = %.4f Nm/sec\n', c);
 
-    estimations = {L_est, m_est, c_est, A_est, B_est, t_cont, q_est, qdot_est, error_est};
+    ymodel = Phi * theta';
+    error = y - ymodel;
+
+    estimations = [L, m, c];
+    model = [ymodel, error];
 end

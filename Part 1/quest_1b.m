@@ -16,12 +16,10 @@ x0 = [0; 0];
 dt = 1e-5;
 tspan = 0:dt:20;
 
-% Input
+% System Simulation
 u = @(t) A0 * sin(omega * t);
-
 xdot = @(t, x) A*x + B*u(t);
 [t, X] = ode45(xdot, tspan, x0);
-
 q = X(:,1);
 qdot = X(:,2);
 
