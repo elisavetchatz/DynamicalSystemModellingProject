@@ -26,10 +26,11 @@ xdot = @(t, x) A*x + B*u(t);
 [t, X] = ode45(@(t, x) system_dynamics(t, x, m, L, c, g, u_func), t_sim, x0);
 q = X(:,1);
 qdot = X(:,2);
+Q = [q, qdot];
 
 %% m, L, c Parameter Estimation - x(t) and u(t) measurable
 % Least Squares Estimation
-estimations = least_squares_estimation(q, t_sim);
+estimations = ls_estimation_qdot(Q, t_sim);
 L_est = estimations(1);
 m_est = estimations(2);
 c_est = estimations(3); 

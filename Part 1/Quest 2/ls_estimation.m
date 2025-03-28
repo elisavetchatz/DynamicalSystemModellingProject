@@ -1,4 +1,7 @@
-function estimations = least_squares_estimation(x, time)
+function estimations = ls_estimation(X, time)
+
+    x = X(:, 1);  % q(t)
+    xdot = X(:, 2);  % q̇(t)
 
     g = 9.81;
     A0 = 4;
@@ -19,7 +22,8 @@ function estimations = least_squares_estimation(x, time)
 
     % Apply filters to q(t) and u(t)
     phi1 = lsim(D1, x, time);  % filtered ddot(q)
-    phi2 = lsim(D2, x, time);  % filtered dot(q)
+    %phi2 = lsim(D2, x, time);  % filtered dot(q)
+    phi2 = lsim(D3, xdot, time);
     phi3 = lsim(D3, x, time);  % filtered q
     yf = lsim(D3, u, time); % filtered u(t)
 
@@ -40,8 +44,7 @@ function estimations = least_squares_estimation(x, time)
     fprintf('Parameter Estimation:\n');
     fprintf('L_est = %.4f m\n', L);
     fprintf('m_est = %.4f kg\n', m);    
-    fprintf('c_est = %.4f Nm/sec\n', c);
-
+    fprintf('c_est = %.4f Nm/sec\n', c); 
 
     estimations = [L, m, c];
 end
