@@ -17,22 +17,19 @@ x0 = [0; 0];
 u_func = @(t) A0 * sin(omega * t);
 
 % Time Setup
-dt = 1e-5;
-tspan = 0:dt:20;
-
-% System Simulation
-xdot = @(t, x) A*x + B*u(t);
-[t, X] = ode45(@(t, x) system_dynamics(t, x, m, L, c, g, u_func), tspan, x0);
-q = X(:,1);
-qdot = X(:,2);
-
-%% m, L, c Parameter Estimation - x(t) and u(t) measurable
 % Sampling
 T_sample = 0.1; 
 t_sim = 0:T_sample:20;
 
+% System Simulation
+xdot = @(t, x) A*x + B*u(t);
+[t, X] = ode45(@(t, x) system_dynamics(t, x, m, L, c, g, u_func), t_sim, x0);
+q = X(:,1);
+qdot = X(:,2);
+
+%% m, L, c Parameter Estimation - x(t) and u(t) measurable
 % Least Squares Estimation
-[estimations, model] = least_squares_estimation(q, t_sim);
+estimations = least_squares_estimation(q, t_sim);
 L_est = estimations(1);
 m_est = estimations(2);
 c_est = estimations(3); 
@@ -42,35 +39,60 @@ c_est = estimations(3);
 q_samples = X_sample(:,1);
 qdot_samples = X_sample(:,2);
 error_est = q - q_samples;
-u_samples = u(t_sim);
-
+error_est_dot = qdot - qdot_samples;
+u_samples = u_func(t_sim);
 
 %% Plotting
+% Plot of angle q(t)
 figure;
-plot(tspan, q, 'b', 'LineWidth', 2); hold on;
-plot(tspan, q_est, 'g--', 'LineWidth', 2);
-xlabel('Time [sec]'); ylabel('q(t) [rad]');
-legend('Real', 'Estimated');
-title('Deflection Angle Comparison');
+plot(t, q, 'b', 'LineWidth', 2); hold on;
+plot(t, q_samples, 'g--', 'LineWidth', 2);
+xlabel('Time [sec]'); ylabel('Angle q(t) [rad]');
+legend('True q(t)', 'Estimated q̂(t)');
+title('Comparison of Angular Position q(t)');
 grid on;
 
+% Plot of angular velocity q̇(t)
 figure;
-plot(tspan, qdot, 'b', 'LineWidth', 2); hold on;
-plot(tspan, qdot_est, 'g--', 'LineWidth', 2);
-xlabel('Time [sec]'); ylabel('qdot(t) [rad/sec]');
-legend('Real', 'Estimated');
-title('Angular Velocity Comparison');
+plot(t, qdot, 'b', 'LineWidth', 2); hold on;
+plot(t, qdot_samples, 'g--', 'LineWidth', 2);
+xlabel('Time [sec]'); ylabel('Angular Velocity q̇(t) [rad/s]');
+legend('True q̇(t)', 'Estimated q̇̂(t)');
+title('Comparison of Angular Velocity q̇(t)');
 grid on;
 
+% Plot of estimation errors and input
 figure;
-subplot(2,1,1);
-plot(tspan, error_est, 'r', 'LineWidth', 2);
+
+subplot(3,1,1);
+plot(t, q - q_samples, 'r', 'LineWidth', 2);
 xlabel('Time [sec]'); ylabel('Error e_q(t)');
-title('Estimation Error q(t)');
+title('Estimation Error in Angle: e_q(t) = q(t) − q̂(t)');
 grid on;
 
-subplot(2,1,2);
-plot(tspan, u(tspan), 'm', 'LineWidth', 2);
+subplot(3,1,2);
+plot(t, qdot - qdot_samples, 'c', 'LineWidth', 2);
+xlabel('Time [sec]'); ylabel('Error e_{q̇}(t)');
+title('Estimation Error in Angular Velocity: e_{q̇}(t) = q̇(t) − q̇̂(t)');
+grid on;
+
+subplot(3,1,3);
+plot(t, u_func(t), 'k', 'LineWidth', 2);
 xlabel('Time [sec]'); ylabel('u(t) [Nm]');
 title('Control Input u(t)');
 grid on;
+
+% UITable
+param_names = {'Length L [m]'; 'Mass m [kg]'; 'Damping c [Nm/s]'};
+real_values = [L; m; c];
+estimated_values = [L_est; m_est; c_est];
+
+tableData = [param_names, num2cell(real_values), num2cell(estimated_values)];
+figure('Name', 'Parameter Estimation Table', 'NumberTitle', 'off', ...
+       'Position', [500 300 500 120]);
+
+uitable('Data', tableData, ...
+        'ColumnName', {'Parameter', 'True Value', 'Estimated Value'}, ...
+        'ColumnWidth', {150, 100, 120}, ...
+        'FontSize', 12, ...
+        'Position', [20 10 460 90]);
