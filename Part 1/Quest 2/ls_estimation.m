@@ -1,4 +1,4 @@
-function estimations = ls_estimation(X, time)
+function estimations = ls_estimation(X, time, qdot_measurable)
 
     x = X(:, 1);  % q(t)
     xdot = X(:, 2);  % q̇(t)
@@ -20,17 +20,19 @@ function estimations = ls_estimation(X, time)
     D2 = tf([0 1 0], lamda);  
     D3 = tf([0 0 1], lamda);
 
-    % Apply filters to q(t) and u(t)
+    % Define Phi matrix through filtered signals
     phi1 = lsim(D1, x, time);  % filtered ddot(q)
-    %phi2 = lsim(D2, x, time);  % filtered dot(q)
-    phi2 = lsim(D3, xdot, time);
+    if qdot_measurable == true
+        phi2 = lsim(D3, xdot, time);  % filtered ddot(q)
+    else
+        phi2 = lsim(D2, x, time);  % filtered ddot(q)
+    end 
     phi3 = lsim(D3, x, time);  % filtered q
     yf = lsim(D3, u, time); % filtered u(t)
-
     Phi = [phi1, phi2, phi3];
 
     % Least Squares Estimation
-    theta = (Phi' * Phi) \ (Phi' * yf); % theta1, 2, 3 = mL^2, c, mgL
+    theta = (Phi' * Phi) \ (Phi' * yf); 
 
     theta1 = theta(1);  % mL^2
     theta2 = theta(2);  % c

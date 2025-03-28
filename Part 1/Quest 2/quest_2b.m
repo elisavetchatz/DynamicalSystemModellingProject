@@ -1,5 +1,7 @@
 clc; clear; close all;
 
+qdot_measurable = false; % true -> 2a, false -> 2b
+
 % System Parameters
 m = 0.75;
 L = 1.25;
@@ -30,7 +32,7 @@ Q = [q, qdot];
 
 %% m, L, c Parameter Estimation - x(t) and u(t) measurable
 % Least Squares Estimation
-estimations = ls_estimation(Q, t_sim);
+estimations = ls_estimation(Q, t_sim, qdot_measurable); 
 L_est = estimations(1);
 m_est = estimations(2);
 c_est = estimations(3); 
