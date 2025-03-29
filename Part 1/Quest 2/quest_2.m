@@ -9,11 +9,7 @@ c = 0.15;
 g = 9.81;
 A0 = 4;
 omega = 2;
-
-% System Dynamics
-A = [0 1; -g/L -c/(m*L^2)];
-B = [0; 1/(m*L^2)];
-x0 = [0; 0];
+x0 = [0; 0]; % Initial conditions: [q(0); q̇(0)]
 
 % Control Input
 u_func = @(t) A0 * sin(omega * t);
@@ -24,7 +20,6 @@ T_sample = 0.1;
 t_sim = 0:T_sample:20;
 
 % System Simulation
-xdot = @(t, x) A*x + B*u(t);
 [t, X] = ode45(@(t, x) system_dynamics(t, x, m, L, c, g, u_func), t_sim, x0);
 q = X(:,1);
 qdot = X(:,2);
