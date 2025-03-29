@@ -1,9 +1,9 @@
 clc; clear; close all;
 
-qdot_measurable = false; % true -> 2a, false -> 2b
+qdot_measurable = true; % true -> 2a, false -> 2b
+noise_percenatge = 0.05; 
 
 rng(40);  
-
 % System Parameters
 m = 0.75;
 L = 1.25;
@@ -11,7 +11,7 @@ c = 0.15;
 g = 9.81;
 A0 = 4;
 omega = 2;
-x0 = [0; 0]; % Initial conditions: [q(0); q̇(0)]
+x0 = [0; 0]; 
 
 % Control Input
 u_func = @(t) A0 * sin(omega * t);
@@ -34,14 +34,14 @@ c_est = estimations(3);
 
 % Simulate with Estimated Parameters
 [t_cont, X_sample] = ode45(@(t, x) system_dynamics(t, x, m_est, L_est, c_est, g, u_func), t_sim, x0);
-q_samples = X_sample(:,1);
-qdot_samples = X_sample(:,2);
+q_samples = X_sample(:, 1);
+qdot_samples = X_sample(:, 2);
 u_samples = u_func(t_sim);
 
 %% Estimation with White Gaussian Noise
 % Add ~5% noise
-noise_level_q = 0.05 * std(q);
-noise_level_qdot = 0.05 * std(qdot);
+noise_level_q = noise_percenatge * std(q);
+noise_level_qdot = noise_percenatge * std(qdot);
 
 q_noisy = q + noise_level_q * randn(size(q));
 qdot_noisy = qdot + noise_level_qdot * randn(size(qdot));
@@ -63,11 +63,16 @@ fprintf('%-20s %-15.4f %-15.4f\n', 'L [m]', L_est, L_est_n);
 fprintf('%-20s %-15.4f %-15.4f\n', 'm [kg]', m_est, m_est_n);
 fprintf('%-20s %-15.4f %-15.4f\n', 'c [Nm/s]', c_est, c_est_n);
 
+data = [L_est,     L_est_n,     L;
+        m_est,     m_est_n,     m;
+        c_est,     c_est_n,     c];
+
+% Bar chart
 figure;
-bar([L_est, L_est_n; m_est, m_est_n; c_est, c_est_n]);
+bar(data);
 set(gca, 'xticklabel', {'L','m','c'});
-legend('Noiseless', 'Noisy');
-title('Comparison of Estimated Parameters, qdot_measurable = false');
+legend('Noiseless', 'Noisy', 'True', 'Location', 'northwest');
+title(sprintf('Comparison of Estimated Parameters, qdot\\_measurable = %d', qdot_measurable));
 xlabel('Parameters');
 ylabel('Estimated Value');
 grid on;
@@ -80,7 +85,7 @@ plot(t_noisy, q_est_noisy, ':r', 'LineWidth', 1.5);
 xlabel('Time (s)');
 ylabel('Position q(t)');
 legend('True', 'Estimation (Clean)', 'Estimation (Noisy)');
-title('Comparison of q(t)');
+title(sprintf('Comparison of q, qdot\\_measurable = %d', qdot_measurable));
 grid on;
 
 % Velocity 
@@ -91,5 +96,5 @@ plot(t_noisy, qdot_est_noisy, ':r', 'LineWidth', 1.5);
 xlabel('Time (s)');
 ylabel('Velocity q̇(t)');
 legend('True', 'Estimation (Clean)', 'Estimation (Noisy)');
-title('Comparison of q̇(t)');
+title(sprintf('Comparison of qdot, qdot\\_measurable = %d', qdot_measurable));
 grid on;
