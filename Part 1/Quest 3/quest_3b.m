@@ -76,3 +76,52 @@ ylabel('Estimation Error');
 legend('Error in L', 'Error in m', 'Error in c');
 title('Parameter Estimation Error vs Sampling Period Ts');
 grid on;
+
+% Προαιρετικά αποθήκευσε και τις εκτιμήσεις:
+L_estimates_Ts = zeros(size(Ts_values));
+m_estimates_Ts = zeros(size(Ts_values));
+c_estimates_Ts = zeros(size(Ts_values));
+
+for i = 1:length(Ts_values)
+    Ts = Ts_values(i);
+    t_local = 0:Ts:20;
+    [~, X_local] = ode45(@(t, x) system_dynamics(t, x, m, L, c, g, u_func), t_local, x0);
+    est = ls_estimation([X_local(:,1), X_local(:,2)], t_local, qdot_measurable);
+    
+    L_estimates_Ts(i) = est(1);
+    m_estimates_Ts(i) = est(2);
+    c_estimates_Ts(i) = est(3);
+end
+
+figure;
+color_L = [0.85, 0.33, 0.10];
+color_m = [0, 0.45, 0.74];
+color_c = [0.47, 0.67, 0.19];
+
+subplot(3,1,1);
+plot(Ts_values, L_estimates_Ts, '-+', 'Color', color_L, 'LineWidth', 1.5); hold on;
+yline(L, '--', 'True L', ...
+    'Color', 'k', ...
+    'LineWidth', 1.5, ...
+    'LabelHorizontalAlignment', 'right', ...
+    'LabelVerticalAlignment', 'bottom');
+ylabel('Estimated L');
+grid on;
+
+subplot(3,1,2);
+plot(Ts_values, m_estimates_Ts, '-x', 'Color', color_m, 'LineWidth', 1.5); hold on;
+yline(m, '--', 'True m', 'Color', 'k', 'LineWidth', 1.5);
+ylabel('Estimated m');
+grid on;
+
+subplot(3,1,3);
+plot(Ts_values, c_estimates_Ts, '-*', 'Color', color_c, 'LineWidth', 1.5); hold on;
+yline(L, '--', 'True c', ...
+    'Color', 'k', ...
+    'LineWidth', 1.5, ...
+    'LabelHorizontalAlignment', 'right', ...
+    'LabelVerticalAlignment', 'bottom');
+xlabel('Sampling Period T_s [sec]');
+ylabel('Estimated c');
+grid on;
+sgtitle('Estimated Parameters vs Sampling Period T_s');

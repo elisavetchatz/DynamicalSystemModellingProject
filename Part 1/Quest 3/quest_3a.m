@@ -79,9 +79,9 @@ grid on;
 
 % Position 
 figure;
-plot(t_sim, q, 'k', 'LineWidth', 2); hold on;
-plot(t_cont, q_samples, '--b', 'LineWidth', 1.5);
-plot(t_noisy, q_est_noisy, ':r', 'LineWidth', 1.5);
+plot(t_sim, q, 'b', 'LineWidth', 2); hold on;
+plot(t_cont, q_samples, '--g', 'LineWidth', 2);
+plot(t_noisy, q_est_noisy, ':r', 'LineWidth', 2);
 xlabel('Time (s)');
 ylabel('Position q(t)');
 legend('True', 'Estimation (Clean)', 'Estimation (Noisy)');
@@ -90,9 +90,9 @@ grid on;
 
 % Velocity 
 figure;
-plot(t_sim, qdot, 'k', 'LineWidth', 2); hold on;
-plot(t_cont, qdot_samples, '--b', 'LineWidth', 1.5);
-plot(t_noisy, qdot_est_noisy, ':r', 'LineWidth', 1.5);
+plot(t_sim, qdot, 'b', 'LineWidth', 2); hold on;
+plot(t_cont, qdot_samples, '--g', 'LineWidth', 2);
+plot(t_noisy, qdot_est_noisy, ':r', 'LineWidth', 2);
 xlabel('Time (s)');
 ylabel('Velocity q̇(t)');
 legend('True', 'Estimation (Clean)', 'Estimation (Noisy)');
