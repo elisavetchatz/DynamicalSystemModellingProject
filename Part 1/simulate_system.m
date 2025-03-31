@@ -1,4 +1,4 @@
-function [t, q, qdot, u] = simulate_true_system(m, L, c, g, A0, omega, x0, t_sim)
+function [t, q, qdot, u] = simulate_system(m, L, c, g, A0, omega, x0, t_sim)
 
     % input function
     u_func = @(t) A0 * sin(omega * t);

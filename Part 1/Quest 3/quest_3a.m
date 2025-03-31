@@ -20,7 +20,7 @@ T_sample = 0.1;
 t_sim = 0:T_sample:20;
 
 % Simulate System
-[t, q, qdot, u] = simulate_true_system(m, L, c, g, A0, omega, x0, t_sim);
+[t, q, qdot, u] = simulate_system(m, L, c, g, A0, omega, x0, t_sim);
 Q = [q, qdot];
 
 % Parameter Estimation (Clean Signals)
@@ -30,7 +30,7 @@ m_est = estimations(2);
 c_est = estimations(3);
 
 % Simulate with Estimated Parameters
-[t_cont, q_samples, qdot_samples, u_samples] = simulate_true_system(m_est, L_est, c_est, g, A0, omega, x0, t_sim);
+[t_cont, q_samples, qdot_samples, u_samples] = simulate_system(m_est, L_est, c_est, g, A0, omega, x0, t_sim);
 
 %% Estimation with White Gaussian Noise
 % Add ~5% noise
@@ -53,7 +53,7 @@ fprintf('%-20s %-15.4f %-15.4f\n', 'L [m]', L_est, L_est_n);
 fprintf('%-20s %-15.4f %-15.4f\n', 'm [kg]', m_est, m_est_n);
 fprintf('%-20s %-15.4f %-15.4f\n', 'c [Nm/s]', c_est, c_est_n);
 
-[t_noisy, q_est_noisy, qdot_est_noisy, u_noisy] = simulate_true_system(m_est_n, L_est_n, c_est_n, g, A0, omega, x0, t_sim);
+[t_noisy, q_est_noisy, qdot_est_noisy, u_noisy] = simulate_system(m_est_n, L_est_n, c_est_n, g, A0, omega, x0, t_sim);
 
 % Position 
 figure;

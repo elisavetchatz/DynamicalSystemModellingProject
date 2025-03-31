@@ -21,7 +21,7 @@ T_sample = 0.1;
 t_sim = 0:T_sample:20;
 
 % Simulate System
-[t, q, qdot, u] = simulate_true_system(m, L, c, g, A0, omega, x0, t_sim);
+[t, q, qdot, u] = simulate_system(m, L, c, g, A0, omega, x0, t_sim);
 Q = [q, qdot];
 
 estimations = ls_estimation(Q, t_sim, qdot_measurable); 
@@ -30,7 +30,7 @@ m_est = estimations(2);
 c_est = estimations(3);
 
 % Simulate with Estimated Parameters
-[t_cont, q_samples, qdot_samples, u_samples] = simulate_true_system(m_est, L_est, c_est, g, A0, omega, x0, t_sim);
+[t_cont, q_samples, qdot_samples, u_samples] = simulate_system(m_est, L_est, c_est, g, A0, omega, x0, t_sim);
 
 %% Task 3c: Effect of Input Amplitude A0 on Estimation Accuracy
 A0_values = 0.5:0.5:10;
@@ -47,7 +47,7 @@ for i = 1:length(A0_values)
     A0_test = A0_values(i);
     
     % Simulate system
-    [t_temp, q_t, qdot_t, u_t] = simulate_true_system(m, L, c, g, A0_test, omega, x0, t_sim);
+    [t_temp, q_t, qdot_t, u_t] = simulate_system(m, L, c, g, A0_test, omega, x0, t_sim);
     X_input = [q_t, qdot_t];
     
     % Estimate parameters

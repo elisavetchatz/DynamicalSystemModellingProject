@@ -15,7 +15,7 @@ dt = 1e-5;
 tspan = 0:dt:20;
 
 % System Simulation
-[t, q, qdot, u] = simulate_true_system(m, L, c, g, A0, omega, x0, tspan);
+[t, q, qdot, u] = simulate_system(m, L, c, g, A0, omega, x0, tspan);
 
 figure;
 subplot(2,1,1);

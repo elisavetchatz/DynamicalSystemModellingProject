@@ -20,7 +20,7 @@ T_sample = 0.1;
 t_sim = 0:T_sample:20;
 
 % Simulate System
-[t, q, qdot, u] = simulate_true_system(m, L, c, g, A0, omega, x0, t_sim);
+[t, q, qdot, u] = simulate_system(m, L, c, g, A0, omega, x0, t_sim);
 Q = [q, qdot];
 
 % Parameter Estimation (Clean Signals)
@@ -30,7 +30,7 @@ m_est = estimations(2);
 c_est = estimations(3);
 
 % Simulate with Estimated Parameters
-[t_cont, q_samples, qdot_samples, u_samples] = simulate_true_system(m_est, L_est, c_est, g, A0, omega, x0, t_sim);
+[t_cont, q_samples, qdot_samples, u_samples] = simulate_system(m_est, L_est, c_est, g, A0, omega, x0, t_sim);
 
 %% Task 3b: Effect of Sampling Period Ts on Estimation Accuracy
 Ts_values = 0.01:0.02:0.5;  % Sampling periods to test
@@ -49,7 +49,7 @@ for i = 1:length(Ts_values)
     t_local = 0:Ts:20;
 
     % Simulate system at current Ts
-    [t_temp, q_l, qdot_l, u_l] = simulate_true_system(m, L, c, g, A0, omega, x0, t_local);
+    [t_temp, q_l, qdot_l, u_l] = simulate_system(m, L, c, g, A0, omega, x0, t_local);
     Q_local = [q_l, qdot_l];
 
     % Estimate parameters

@@ -19,7 +19,7 @@ T_sample = 0.1;
 t_sim = 0:T_sample:20;
 
 % System Simulation
-[t, q, qdot, u] = simulate_true_system(m, L, c, g, A0, omega, x0, t_sim);
+[t, q, qdot, u] = simulate_system(m, L, c, g, A0, omega, x0, t_sim);
 Q = [q, qdot];
 
 %% m, L, c Parameter Estimation - x(t) and u(t) measurable
@@ -30,7 +30,7 @@ m_est = estimations(2);
 c_est = estimations(3); 
 
 % System Simulation with Estimated Parameters
-[t_cont, q_samples, qdot_samples, u_samples] = simulate_true_system(m_est, L_est, c_est, g, A0, omega, x0, t_sim);
+[t_cont, q_samples, qdot_samples, u_samples] = simulate_system(m_est, L_est, c_est, g, A0, omega, x0, t_sim);
 error_est = q - q_samples;
 error_est_dot = qdot - qdot_samples;
 
