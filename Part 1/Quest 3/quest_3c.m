@@ -1,4 +1,6 @@
 clc; clear; close all;
+addpath('C:\Users\30690\DynamicalSystemModellingandSimulation-Projects\Part 1')
+addpath('../Part 1')
 
 qdot_measurable = true; % true -> 2a, false -> 2b
 noise_percenatge = 0.05; 
@@ -76,11 +78,17 @@ for i = 1:length(A0_values)
 
 end
 
+%% Plotting Results
+color_L = [0, 0, 1];
+color_m = [0, 1, 0];
+color_c = [1, 0, 0];
+
 % Errors vs A0 
 figure;
-plot(A0_values, errors_L_A0, '-+', 'LineWidth', 2); hold on;
-plot(A0_values, errors_m_A0, '-x', 'LineWidth', 2);
-plot(A0_values, errors_c_A0, '-*', 'LineWidth', 2);
+plot(A0_values, errors_L_A0, '-+', 'LineWidth', 2, 'Color', color_L); hold on;
+plot(A0_values, errors_m_A0, '-x', 'LineWidth', 2, 'Color', color_m);
+plot(A0_values, errors_c_A0, '-*', 'LineWidth', 2, 'Color', color_c);
+yline(0, '--k', 'LineWidth', 1.5);
 xlabel('Input Amplitude A0');
 ylabel('Estimation Error');
 legend('Error in L', 'Error in m', 'Error in c');
@@ -89,10 +97,6 @@ grid on;
 ylim([-1, max([errors_L_A0, errors_m_A0, errors_c_A0])*1.1]);
 
 % Plot estimated parameters vs A0
-color_L = [0.85, 0.33, 0.10];   % orange
-color_m = [0, 0.45, 0.74];      % blue
-color_c = [0.47, 0.67, 0.19];   % green
-
 figure;
 subplot(3,1,1);
 plot(A0_values, L_estimates, '-+', 'LineWidth', 1.5, 'Color', color_L); hold on;

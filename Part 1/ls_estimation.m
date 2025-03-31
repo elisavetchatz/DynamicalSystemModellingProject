@@ -22,10 +22,12 @@ function estimations = ls_estimation(X, time, qdot_measurable)
 
     % Define Phi matrix through filtered signals
     phi1 = lsim(D1, x, time);  % filtered ddot(q)
-    if qdot_measurable == true
-        phi2 = lsim(D3, xdot, time);  % filtered ddot(q)
+    if qdot_measurable == true 
+        phi2 = lsim(D3, xdot, time);  
+        disp('Using q̇(t) for estimation\n');
     else
-        phi2 = lsim(D2, x, time);  % filtered ddot(q)
+        phi2 = lsim(D2, x, time);  
+        disp('Using q(t) for estimation\n');
     end 
     phi3 = lsim(D3, x, time);  % filtered q
     yf = lsim(D3, u, time); % filtered u(t)

@@ -1,6 +1,8 @@
 clc; clear; close all;
+addpath('C:\Users\30690\DynamicalSystemModellingandSimulation-Projects\Part 1')
+addpath('../Part 1')
 
-qdot_measurable = false; % true -> 2a, false -> 2b
+qdot_measurable = true; % true -> 2a, false -> 2b
 
 % System Parameters
 m = 0.75;
@@ -69,7 +71,7 @@ title('Estimation Error in Angle: e_q(t) = q(t) − q̂(t)');
 grid on;
 
 subplot(3,1,2);
-plot(t, qdot - qdot_samples, 'c', 'LineWidth', 2);
+plot(t, qdot - qdot_samples, 'm', 'LineWidth', 2);
 xlabel('Time [sec]'); ylabel('Error e_{q̇}(t)');
 title('Estimation Error in Angular Velocity: e_{q̇}(t) = q̇(t) − q̇̂(t)');
 grid on;

@@ -1,4 +1,6 @@
 clc; clear; close all;
+addpath('C:\Users\30690\DynamicalSystemModellingandSimulation-Projects\Part 1')
+addpath('../Part 1')
 
 % System Parameters
 m = 0.75;

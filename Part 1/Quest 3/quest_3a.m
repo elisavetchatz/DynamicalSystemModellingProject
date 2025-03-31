@@ -1,4 +1,6 @@
 clc; clear; close all;
+addpath('C:\Users\30690\DynamicalSystemModellingandSimulation-Projects\Part 1')
+addpath('../Part 1')
 
 qdot_measurable = true; % true -> 2a, false -> 2b
 noise_percenatge = 0.05; 
@@ -63,25 +65,11 @@ fprintf('%-20s %-15.4f %-15.4f\n', 'L [m]', L_est, L_est_n);
 fprintf('%-20s %-15.4f %-15.4f\n', 'm [kg]', m_est, m_est_n);
 fprintf('%-20s %-15.4f %-15.4f\n', 'c [Nm/s]', c_est, c_est_n);
 
-data = [L_est,     L_est_n,     L;
-        m_est,     m_est_n,     m;
-        c_est,     c_est_n,     c];
-
-% Bar chart
-figure;
-bar(data);
-set(gca, 'xticklabel', {'L','m','c'});
-legend('Noiseless', 'Noisy', 'True', 'Location', 'northwest');
-title(sprintf('Comparison of Estimated Parameters, qdot\\_measurable = %d', qdot_measurable));
-xlabel('Parameters');
-ylabel('Estimated Value');
-grid on;
-
 % Position 
 figure;
 plot(t_sim, q, 'b', 'LineWidth', 2); hold on;
 plot(t_cont, q_samples, '--g', 'LineWidth', 2);
-plot(t_noisy, q_est_noisy, ':r', 'LineWidth', 2);
+plot(t_noisy, q_est_noisy, '--r', 'LineWidth', 1);
 xlabel('Time (s)');
 ylabel('Position q(t)');
 legend('True', 'Estimation (Clean)', 'Estimation (Noisy)');
@@ -92,9 +80,29 @@ grid on;
 figure;
 plot(t_sim, qdot, 'b', 'LineWidth', 2); hold on;
 plot(t_cont, qdot_samples, '--g', 'LineWidth', 2);
-plot(t_noisy, qdot_est_noisy, ':r', 'LineWidth', 2);
+plot(t_noisy, qdot_est_noisy, '--r', 'LineWidth', 1);
 xlabel('Time (s)');
 ylabel('Velocity q̇(t)');
 legend('True', 'Estimation (Clean)', 'Estimation (Noisy)');
 title(sprintf('Comparison of qdot, qdot\\_measurable = %d', qdot_measurable));
+grid on;
+
+data = [L_est,     L_est_n,     L;
+        m_est,     m_est_n,     m;
+        c_est,     c_est_n,     c];
+colors = [ 
+        0, 255, 0 % Green
+        255, 0, 0; % Red
+        0, 0, 255; % Blue
+] / 255;
+figure;
+b = bar(data); 
+for k = 1:length(b)
+    b(k).FaceColor = colors(k, :);
+end
+set(gca, 'xticklabel', {'L','m','c'});
+legend('Noiseless', 'Noisy', 'True', 'Location', 'northwest');
+title(sprintf('Comparison of Estimated Parameters, qdot\\_measurable = %d', qdot_measurable));
+xlabel('Parameters');
+ylabel('Estimated Value');
 grid on;

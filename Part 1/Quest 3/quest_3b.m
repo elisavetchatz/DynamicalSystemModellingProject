@@ -1,4 +1,6 @@
 clc; clear; close all;
+addpath('C:\Users\30690\DynamicalSystemModellingandSimulation-Projects\Part 1')
+addpath('../Part 1')
 
 qdot_measurable = true; % true -> 2a, false -> 2b
 noise_percenatge = 0.05; 
@@ -66,18 +68,6 @@ for i = 1:length(Ts_values)
     errors_c(i) = abs(est(3) - c);
 end
 
-% --- Plotting Errors vs Ts ---
-figure;
-plot(Ts_values, errors_L, '-+', 'LineWidth', 1.5); hold on;
-plot(Ts_values, errors_m, '-x', 'LineWidth', 1.5);
-plot(Ts_values, errors_c, '-*', 'LineWidth', 1.5);
-xlabel('Sampling Period Ts [sec]');
-ylabel('Estimation Error');
-legend('Error in L', 'Error in m', 'Error in c');
-title('Parameter Estimation Error vs Sampling Period Ts');
-grid on;
-
-% Προαιρετικά αποθήκευσε και τις εκτιμήσεις:
 L_estimates_Ts = zeros(size(Ts_values));
 m_estimates_Ts = zeros(size(Ts_values));
 c_estimates_Ts = zeros(size(Ts_values));
@@ -93,11 +83,25 @@ for i = 1:length(Ts_values)
     c_estimates_Ts(i) = est(3);
 end
 
-figure;
-color_L = [0.85, 0.33, 0.10];
-color_m = [0, 0.45, 0.74];
-color_c = [0.47, 0.67, 0.19];
+%% Plotting Results
+% Errors vs Ts 
+color_L = [0, 0, 1];
+color_m = [0, 1, 0];
+color_c = [1, 0, 0];
 
+figure;
+plot(Ts_values, errors_L, '-+', 'LineWidth', 1.5, 'Color', color_L); hold on;
+plot(Ts_values, errors_m, '-x', 'LineWidth', 1.5, 'Color', color_m);
+plot(Ts_values, errors_c, '-*', 'LineWidth', 1.5, 'Color', color_c);
+yline(0, '--', 'Zero Error', 'Color', 'k', 'LineWidth', 1.5);
+xlabel('Sampling Period Ts [sec]');
+ylabel('Estimation Error');
+legend('Error in L', 'Error in m', 'Error in c');
+title('Parameter Estimation Error vs Sampling Period Ts');
+grid on;
+
+% Estimated Parameters vs Ts
+figure;
 subplot(3,1,1);
 plot(Ts_values, L_estimates_Ts, '-+', 'Color', color_L, 'LineWidth', 1.5); hold on;
 yline(L, '--', 'True L', ...
