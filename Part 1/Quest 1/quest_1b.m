@@ -17,6 +17,7 @@ tspan = 0:dt:20;
 % System Simulation
 [t, q, qdot, u] = simulate_system(m, L, c, g, A0, omega, x0, tspan);
 
+%% Plotting
 figure;
 subplot(2,1,1);
 plot(t, q, 'b', 'LineWidth', 2);
@@ -45,4 +46,3 @@ xlabel('Time [sec]');
 ylabel('u(t)');
 title('Input Signal');
 grid on;
-

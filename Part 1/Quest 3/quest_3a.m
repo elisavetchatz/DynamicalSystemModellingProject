@@ -32,7 +32,7 @@ c_est = estimations(3);
 % Simulate with Estimated Parameters
 [t_cont, q_samples, qdot_samples, u_samples] = simulate_system(m_est, L_est, c_est, g, A0, omega, x0, t_sim);
 
-%% Estimation with White Gaussian Noise
+%% Task 3a: Estimation with White Gaussian Noise
 % Add ~5% noise
 noise_level_q = noise_percenatge * std(q);
 noise_level_qdot = noise_percenatge * std(qdot);
@@ -55,6 +55,7 @@ fprintf('%-20s %-15.4f %-15.4f\n', 'c [Nm/s]', c_est, c_est_n);
 
 [t_noisy, q_est_noisy, qdot_est_noisy, u_noisy] = simulate_system(m_est_n, L_est_n, c_est_n, g, A0, omega, x0, t_sim);
 
+%% Plotting
 % Position 
 figure;
 plot(t_sim, q, 'b', 'LineWidth', 2); hold on;

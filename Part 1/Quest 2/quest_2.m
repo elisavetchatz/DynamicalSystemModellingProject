@@ -22,7 +22,7 @@ t_sim = 0:T_sample:20;
 [t, q, qdot, u] = simulate_system(m, L, c, g, A0, omega, x0, t_sim);
 Q = [q, qdot];
 
-%% m, L, c Parameter Estimation - x(t) and u(t) measurable
+%% Task 2a-2b: m, L, c Parameter Estimation - x(t) and u(t) measurable
 % Least Squares Estimation
 estimations = ls_estimation(Q, t, qdot_measurable); 
 L_est = estimations(1);
@@ -75,7 +75,6 @@ grid on;
 param_names = {'Length L [m]'; 'Mass m [kg]'; 'Damping c [Nm/s]'};
 real_values = [L; m; c];
 estimated_values = [L_est; m_est; c_est];
-
 tableData = [param_names, num2cell(real_values), num2cell(estimated_values)];
 figure('Name', 'Parameter Estimation Table', 'NumberTitle', 'off', ...
        'Position', [500 300 500 120]);
