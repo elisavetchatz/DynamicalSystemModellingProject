@@ -2,7 +2,7 @@ clc; clear; close all;
 addpath('C:\Users\30690\DynamicalSystemModellingandSimulation-Projects\Part 1')
 addpath('../Part 1')
 
-qdot_measurable = true; % true -> 2a, false -> 2b
+qdot_measurable = false; % true -> 2a, false -> 2b
 noise_percenatge = 0.05; 
 rng(40);  
 
@@ -78,7 +78,7 @@ yline(0, '--k', 'LineWidth', 1.5);
 xlabel('Input Amplitude A0');
 ylabel('Estimation Error');
 legend('Error in L', 'Error in m', 'Error in c');
-title('Parameter Estimation Error vs Input Amplitude A0');
+title(sprintf('Parameter Estimation Error vs Input Amplitude A0, qdot\\_measurable = %d', qdot_measurable'));
 grid on;
 ylim([-1, max([errors_L_A0, errors_m_A0, errors_c_A0])*1.1]);
 
@@ -88,6 +88,7 @@ subplot(3,1,1);
 plot(A0_values, L_estimates, '-+', 'LineWidth', 1.5, 'Color', color_L); hold on;
 yline(L, '--', 'True L', 'LineWidth', 1.5, 'Color', 'k');
 ylabel('Estimated L');
+title(sprintf('Estimated Parameters vs Input Amplitude A0, qdot\\_measurable = %d', qdot_measurable'));
 grid on;
 subplot(3,1,2);
 plot(A0_values, m_estimates, '-x', 'LineWidth', 1.5, 'Color', color_m); hold on;
@@ -99,4 +100,3 @@ plot(A0_values, c_estimates, '-*', 'LineWidth', 1.5, 'Color', color_c); hold on;
 yline(c, '--', 'True c', 'LineWidth', 1.5, 'Color', 'k');
 xlabel('A_0'); ylabel('Estimated c');
 grid on;
-sgtitle('Estimated Parameters vs Input Amplitude A_0');

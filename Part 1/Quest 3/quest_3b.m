@@ -2,8 +2,8 @@ clc; clear; close all;
 addpath('C:\Users\30690\DynamicalSystemModellingandSimulation-Projects\Part 1')
 addpath('../Part 1')
 
-qdot_measurable = true; % true -> 2a, false -> 2b
-noise_percenatge = 0.05; 
+qdot_measurable = false; % true -> 2a, false -> 2b
+noise_percenatge = 0.05;
 rng(40);  
 
 % System Parameters
@@ -79,7 +79,7 @@ yline(0, '--', 'Zero Error', 'Color', 'k', 'LineWidth', 1.5);
 xlabel('Sampling Period Ts [sec]');
 ylabel('Estimation Error');
 legend('Error in L', 'Error in m', 'Error in c');
-title('Parameter Estimation Error vs Sampling Period Ts');
+title(sprintf('Parameter Estimation Error vs Sampling Period Ts, qdot\\_measurable = %d', qdot_measurable'));
 grid on;
 
 % Estimated Parameters vs Ts
@@ -92,6 +92,7 @@ yline(L, '--', 'True L', ...
     'LabelHorizontalAlignment', 'right', ...
     'LabelVerticalAlignment', 'bottom');
 ylabel('Estimated L');
+title(sprintf('Estimated Parameters vs Sampling Period T_s, qdot\\_measurable = %d', qdot_measurable'));
 grid on;
 
 subplot(3,1,2);
@@ -110,4 +111,3 @@ yline(L, '--', 'True c', ...
 xlabel('Sampling Period T_s [sec]');
 ylabel('Estimated c');
 grid on;
-sgtitle('Estimated Parameters vs Sampling Period T_s');
