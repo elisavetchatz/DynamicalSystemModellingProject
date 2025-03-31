@@ -4,8 +4,8 @@ addpath('../Part 1')
 
 qdot_measurable = true; % true -> 2a, false -> 2b
 noise_percenatge = 0.05; 
+rng(40); 
 
-rng(40);  
 % System Parameters
 m = 0.75;
 L = 1.25;
@@ -15,17 +15,12 @@ A0 = 4;
 omega = 2;
 x0 = [0; 0]; 
 
-% Control Input
-u_func = @(t) A0 * sin(omega * t);
-
 % Time Setup
 T_sample = 0.1; 
 t_sim = 0:T_sample:20;
 
 % Simulate System
-[t, X] = ode45(@(t, x) system_dynamics(t, x, m, L, c, g, u_func), t_sim, x0);
-q = X(:,1);
-qdot = X(:,2);
+[t, q, qdot, u] = simulate_true_system(m, L, c, g, A0, omega, x0, t_sim);
 Q = [q, qdot];
 
 % Parameter Estimation (Clean Signals)
@@ -35,10 +30,7 @@ m_est = estimations(2);
 c_est = estimations(3);
 
 % Simulate with Estimated Parameters
-[t_cont, X_sample] = ode45(@(t, x) system_dynamics(t, x, m_est, L_est, c_est, g, u_func), t_sim, x0);
-q_samples = X_sample(:, 1);
-qdot_samples = X_sample(:, 2);
-u_samples = u_func(t_sim);
+[t_cont, q_samples, qdot_samples, u_samples] = simulate_true_system(m_est, L_est, c_est, g, A0, omega, x0, t_sim);
 
 %% Estimation with White Gaussian Noise
 % Add ~5% noise
@@ -55,15 +47,13 @@ L_est_n = estimations_noisy(1);
 m_est_n = estimations_noisy(2);
 c_est_n = estimations_noisy(3);
 
-[t_noisy, X_noisy_est] = ode45(@(t, x) system_dynamics(t, x, m_est_n, L_est_n, c_est_n, g, u_func), t_sim, x0);
-q_est_noisy = X_noisy_est(:, 1);
-qdot_est_noisy = X_noisy_est(:, 2);
-
 fprintf('\n--- Parameter Comparison: Without vs With Noise ---\n');
 fprintf('%-20s %-15s %-15s\n', 'Parameter', 'Noiseless', 'Noisy');
 fprintf('%-20s %-15.4f %-15.4f\n', 'L [m]', L_est, L_est_n);
 fprintf('%-20s %-15.4f %-15.4f\n', 'm [kg]', m_est, m_est_n);
 fprintf('%-20s %-15.4f %-15.4f\n', 'c [Nm/s]', c_est, c_est_n);
+
+[t_noisy, q_est_noisy, qdot_est_noisy, u_noisy] = simulate_true_system(m_est_n, L_est_n, c_est_n, g, A0, omega, x0, t_sim);
 
 % Position 
 figure;

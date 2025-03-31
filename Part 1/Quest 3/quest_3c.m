@@ -4,30 +4,24 @@ addpath('../Part 1')
 
 qdot_measurable = true; % true -> 2a, false -> 2b
 noise_percenatge = 0.05; 
-
 rng(40);  
+
 % System Parameters
 m = 0.75;
 L = 1.25;
 c = 0.15;
-true_params = [L, m, c];
-
 g = 9.81;
 A0 = 4;
 omega = 2;
 x0 = [0; 0]; 
-
-% Control Input
-u_func = @(t) A0 * sin(omega * t);
+true_params = [L, m, c];
 
 % Time Setup
 T_sample = 0.1; 
 t_sim = 0:T_sample:20;
 
 % Simulate System
-[t, X] = ode45(@(t, x) system_dynamics(t, x, m, L, c, g, u_func), t_sim, x0);
-q = X(:,1);
-qdot = X(:,2);
+[t, q, qdot, u] = simulate_true_system(m, L, c, g, A0, omega, x0, t_sim);
 Q = [q, qdot];
 
 estimations = ls_estimation(Q, t_sim, qdot_measurable); 
@@ -36,10 +30,7 @@ m_est = estimations(2);
 c_est = estimations(3);
 
 % Simulate with Estimated Parameters
-[t_cont, X_sample] = ode45(@(t, x) system_dynamics(t, x, m_est, L_est, c_est, g, u_func), t_sim, x0);
-q_samples = X_sample(:, 1);
-qdot_samples = X_sample(:, 2);
-u_samples = u_func(t_sim);
+[t_cont, q_samples, qdot_samples, u_samples] = simulate_true_system(m_est, L_est, c_est, g, A0, omega, x0, t_sim);
 
 %% Task 3c: Effect of Input Amplitude A0 on Estimation Accuracy
 A0_values = 0.5:0.5:10;
@@ -55,17 +46,12 @@ c_estimates = zeros(size(A0_values));
 for i = 1:length(A0_values)
     A0_test = A0_values(i);
     
-    % Redefine input function with current A0
-    u_func_temp = @(t) A0_test * sin(omega * t);
-    
     % Simulate system
-    [~, X_temp] = ode45(@(t, x) system_dynamics(t, x, m, L, c, g, u_func_temp), t_sim, x0);
-    q_t = X_temp(:,1);
-    qdot_t = X_temp(:,2);
+    [t_temp, q_t, qdot_t, u_t] = simulate_true_system(m, L, c, g, A0_test, omega, x0, t_sim);
     X_input = [q_t, qdot_t];
     
     % Estimate parameters
-    est = ls_estimation(X_input, t_sim, qdot_measurable);
+    est = ls_estimation(X_input, t_temp, qdot_measurable);
     
     % Store absolute errors
     errors_L_A0(i) = abs(est(1) - L);

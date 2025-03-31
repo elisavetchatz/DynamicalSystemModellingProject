@@ -11,10 +11,7 @@ c = 0.15;
 g = 9.81;
 A0 = 4;
 omega = 2;
-x0 = [0; 0]; % Initial conditions: [q(0); q̇(0)]
-
-% Control Input
-u_func = @(t) A0 * sin(omega * t);
+x0 = [0; 0]; 
 
 % Time Setup
 % Sampling
@@ -22,25 +19,20 @@ T_sample = 0.1;
 t_sim = 0:T_sample:20;
 
 % System Simulation
-[t, X] = ode45(@(t, x) system_dynamics(t, x, m, L, c, g, u_func), t_sim, x0);
-q = X(:,1);
-qdot = X(:,2);
+[t, q, qdot, u] = simulate_true_system(m, L, c, g, A0, omega, x0, t_sim);
 Q = [q, qdot];
 
 %% m, L, c Parameter Estimation - x(t) and u(t) measurable
 % Least Squares Estimation
-estimations = ls_estimation(Q, t_sim, qdot_measurable); 
+estimations = ls_estimation(Q, t, qdot_measurable); 
 L_est = estimations(1);
 m_est = estimations(2);
 c_est = estimations(3); 
 
 % System Simulation with Estimated Parameters
-[t_cont, X_sample] = ode45(@(t, x) system_dynamics(t, x, m_est, L_est, c_est, g, u_func), t_sim, x0);
-q_samples = X_sample(:,1);
-qdot_samples = X_sample(:,2);
+[t_cont, q_samples, qdot_samples, u_samples] = simulate_true_system(m_est, L_est, c_est, g, A0, omega, x0, t_sim);
 error_est = q - q_samples;
 error_est_dot = qdot - qdot_samples;
-u_samples = u_func(t_sim);
 
 %% Plotting
 % Plot of angle q(t)
@@ -63,21 +55,18 @@ grid on;
 
 % Plot of estimation errors and input
 figure;
-
 subplot(3,1,1);
 plot(t, q - q_samples, 'r', 'LineWidth', 2);
 xlabel('Time [sec]'); ylabel('Error e_q(t)');
 title('Estimation Error in Angle: e_q(t) = q(t) − q̂(t)');
 grid on;
-
 subplot(3,1,2);
 plot(t, qdot - qdot_samples, 'm', 'LineWidth', 2);
 xlabel('Time [sec]'); ylabel('Error e_{q̇}(t)');
 title('Estimation Error in Angular Velocity: e_{q̇}(t) = q̇(t) − q̇̂(t)');
 grid on;
-
 subplot(3,1,3);
-plot(t, u_func(t), 'k', 'LineWidth', 2);
+plot(t, u_samples, 'k', 'LineWidth', 2);
 xlabel('Time [sec]'); ylabel('u(t) [Nm]');
 title('Control Input u(t)');
 grid on;
