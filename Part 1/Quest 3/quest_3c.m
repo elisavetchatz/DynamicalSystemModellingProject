@@ -24,7 +24,7 @@ t_sim = 0:T_sample:20;
 [t, q, qdot, u] = simulate_system(m, L, c, g, A0, omega, x0, t_sim);
 Q = [q, qdot];
 
-estimations = ls_estimation(Q, t_sim, qdot_measurable); 
+[estimations, ~] = ls_estimation(Q, t_sim, qdot_measurable); 
 L_est = estimations(1);
 m_est = estimations(2);
 c_est = estimations(3);
@@ -43,6 +43,8 @@ L_estimates = zeros(size(A0_values));
 m_estimates = zeros(size(A0_values));
 c_estimates = zeros(size(A0_values));
 
+condition_numbers = zeros(size(A0_values));
+
 for i = 1:length(A0_values)
     A0_test = A0_values(i);
     
@@ -51,7 +53,7 @@ for i = 1:length(A0_values)
     X_input = [q_t, qdot_t];
     
     % Estimate parameters
-    est = ls_estimation(X_input, t_temp, qdot_measurable);
+    [est, condition_number] = ls_estimation(X_input, t_temp, qdot_measurable);
     
     % Store absolute errors
     errors_L_A0(i) = abs(est(1) - L);
@@ -61,6 +63,8 @@ for i = 1:length(A0_values)
     L_estimates(i) = est(1);
     m_estimates(i) = est(2);
     c_estimates(i) = est(3);
+
+    condition_numbers(i) = condition_number;
 
 end
 
@@ -100,3 +104,22 @@ plot(A0_values, c_estimates, '-*', 'LineWidth', 1.5, 'Color', color_c); hold on;
 yline(c, '--', 'True c', 'LineWidth', 1.5, 'Color', 'k');
 xlabel('A_0'); ylabel('Estimated c');
 grid on;
+
+% condition number vs A0 table
+disp('Condition Number vs A0');
+disp('A0       Condition Number');
+disp('--------------------------');
+for i = 1:length(A0_values)
+    fprintf('%.2f    %.4f\n', A0_values(i), condition_numbers(i));
+end
+
+
+% % Condition Number vs A0
+% figure;
+% plot(A0_values, condition_numbers, '-o', 'LineWidth', 2, 'Color', [0.5, 0.5, 0.5]);
+% xlabel('Input Amplitude A0');
+% ylabel('Condition Number of Phi');
+% title(sprintf('Condition Number vs Input Amplitude A0, qdot\\_measurable = %d', qdot_measurable'));
+% grid on;
+% ylim([0, max(condition_numbers)*1.1]);
+% legend('Condition Number', 'Threshold (10)', 'Location', 'northwest');

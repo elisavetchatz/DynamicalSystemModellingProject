@@ -2,7 +2,7 @@ clc; clear; close all;
 addpath('C:\Users\30690\DynamicalSystemModellingandSimulation-Projects\Part 1')
 addpath('../Part 1')
 
-qdot_measurable = false; % true -> 2a, false -> 2b
+qdot_measurable = true; % true -> 2a, false -> 2b
 noise_percenatge = 0.05; 
 rng(40); 
 
@@ -97,3 +97,13 @@ title(sprintf('Comparison of Estimated Parameters, qdot\\_measurable = %d', qdot
 xlabel('Parameters');
 ylabel('Estimated Value');
 grid on;
+
+true_vals = [L; m; c];
+rel_err_noiseless = abs(data(:,1) - true_vals) ./ true_vals * 100;
+rel_err_noisy = abs(data(:,2) - true_vals) ./ true_vals * 100;
+
+fprintf('\n--- Relative Error (%%), qdot_measurable = %d ---\n', qdot_measurable);
+fprintf('%-10s %-12s %-12s\n', 'Parameter', 'Noiseless', 'Noisy');
+fprintf('%-10s %-12.2f %-12.2f\n', 'L', rel_err_noiseless(1), rel_err_noisy(1));
+fprintf('%-10s %-12.2f %-12.2f\n', 'm', rel_err_noiseless(2), rel_err_noisy(2));
+fprintf('%-10s %-12.2f %-12.2f\n', 'c', rel_err_noiseless(3), rel_err_noisy(3));
