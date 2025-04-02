@@ -33,7 +33,7 @@ c_est = estimations(3);
 [t_cont, q_samples, qdot_samples, u_samples] = simulate_system(m_est, L_est, c_est, g, A0, omega, x0, t_sim);
 
 %% Task 3b: Effect of Sampling Period Ts on Estimation Accuracy
-Ts_values = 0.01:0.02:0.5;  % Sampling periods to test
+Ts_values = 0.01:0.01:0.5;  % Sampling periods to test
 true_params = [L, m, c];
 
 errors_L = zeros(size(Ts_values));

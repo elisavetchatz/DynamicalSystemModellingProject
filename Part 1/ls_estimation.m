@@ -1,4 +1,4 @@
-function [estimations, cond_number] = ls_estimation(X, time, qdot_measurable)
+function estimations = ls_estimation(X, time, qdot_measurable)
 
     x = X(:, 1);  % q(t)
     xdot = X(:, 2);  % q̇(t)
@@ -32,9 +32,6 @@ function [estimations, cond_number] = ls_estimation(X, time, qdot_measurable)
     phi3 = lsim(D3, x, time);  % filtered q
     yf = lsim(D3, u, time); % filtered u(t)
     Phi = [phi1, phi2, phi3];
-
-    cond_number = cond(Phi' * Phi);
-    fprintf('Condition Number of Phi: %.4f\n', cond_number);
 
     % Least Squares Estimation
     theta = (Phi' * Phi) \ (Phi' * yf); 

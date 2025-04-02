@@ -3,7 +3,6 @@ addpath('C:\Users\30690\DynamicalSystemModellingandSimulation-Projects\Part 1')
 addpath('../Part 1')
 
 qdot_measurable = false; % true -> 2a, false -> 2b
-noise_percenatge = 0.05; 
 rng(40);  
 
 % System Parameters
@@ -53,7 +52,7 @@ for i = 1:length(A0_values)
     X_input = [q_t, qdot_t];
     
     % Estimate parameters
-    [est, condition_number] = ls_estimation(X_input, t_temp, qdot_measurable);
+    est = ls_estimation(X_input, t_temp, qdot_measurable);
     
     % Store absolute errors
     errors_L_A0(i) = abs(est(1) - L);
@@ -63,9 +62,6 @@ for i = 1:length(A0_values)
     L_estimates(i) = est(1);
     m_estimates(i) = est(2);
     c_estimates(i) = est(3);
-
-    condition_numbers(i) = condition_number;
-
 end
 
 %% Plotting Results
@@ -104,22 +100,3 @@ plot(A0_values, c_estimates, '-*', 'LineWidth', 1.5, 'Color', color_c); hold on;
 yline(c, '--', 'True c', 'LineWidth', 1.5, 'Color', 'k');
 xlabel('A_0'); ylabel('Estimated c');
 grid on;
-
-% condition number vs A0 table
-disp('Condition Number vs A0');
-disp('A0       Condition Number');
-disp('--------------------------');
-for i = 1:length(A0_values)
-    fprintf('%.2f    %.4f\n', A0_values(i), condition_numbers(i));
-end
-
-
-% % Condition Number vs A0
-% figure;
-% plot(A0_values, condition_numbers, '-o', 'LineWidth', 2, 'Color', [0.5, 0.5, 0.5]);
-% xlabel('Input Amplitude A0');
-% ylabel('Condition Number of Phi');
-% title(sprintf('Condition Number vs Input Amplitude A0, qdot\\_measurable = %d', qdot_measurable'));
-% grid on;
-% ylim([0, max(condition_numbers)*1.1]);
-% legend('Condition Number', 'Threshold (10)', 'Location', 'northwest');
