@@ -24,7 +24,7 @@ t_sim = 0:T_sample:20;
 Q = [q, qdot];
 
 % Parameter Estimation (Clean Signals)
-estimations = ls_estimation(Q, t_sim, qdot_measurable); 
+estimations = ls_estimation(Q, t_sim, qdot_measurable, A0); 
 L_est = estimations(1);
 m_est = estimations(2);
 c_est = estimations(3);
@@ -42,7 +42,7 @@ qdot_noisy = qdot + noise_level_qdot * randn(size(qdot));
 X_noisy = [q_noisy, qdot_noisy];
 
 % Estimation with noise
-estimations_noisy = ls_estimation(X_noisy, t_sim, qdot_measurable);
+estimations_noisy = ls_estimation(X_noisy, t_sim, qdot_measurable, A0);
 L_est_n = estimations_noisy(1);
 m_est_n = estimations_noisy(2);
 c_est_n = estimations_noisy(3);

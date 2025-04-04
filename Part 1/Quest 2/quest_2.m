@@ -2,7 +2,7 @@ clc; clear; close all;
 addpath('C:\Users\30690\DynamicalSystemModellingandSimulation-Projects\Part 1')
 addpath('../Part 1')
 
-qdot_measurable = true; % true -> 2a, false -> 2b
+qdot_measurable = false; % true -> 2a, false -> 2b
 
 % System Parameters
 m = 0.75;
@@ -24,7 +24,7 @@ Q = [q, qdot];
 
 %% Task 2a-2b: m, L, c Parameter Estimation - x(t) and u(t) measurable
 % Least Squares Estimation
-estimations = ls_estimation(Q, t, qdot_measurable); 
+estimations = ls_estimation(Q, t, qdot_measurable, A0); 
 L_est = estimations(1);
 m_est = estimations(2);
 c_est = estimations(3); 

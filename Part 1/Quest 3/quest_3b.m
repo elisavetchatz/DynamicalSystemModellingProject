@@ -24,7 +24,7 @@ t_sim = 0:T_sample:20;
 Q = [q, qdot];
 
 % Parameter Estimation (Clean Signals)
-estimations = ls_estimation(Q, t_sim, qdot_measurable); 
+estimations = ls_estimation(Q, t_sim, qdot_measurable, A0); 
 L_est = estimations(1);
 m_est = estimations(2);
 c_est = estimations(3);
@@ -53,9 +53,9 @@ for i = 1:length(Ts_values)
     Q_local = [q_l, qdot_l];
 
     % Estimate parameters
-    est = ls_estimation(Q_local, t_local, qdot_measurable);
+    est = ls_estimation(Q_local, t_local, qdot_measurable, A0);
     
-    % Store absolute errors
+    % absolute errors
     errors_L(i) = abs(est(1) - L);
     errors_m(i) = abs(est(2) - m);
     errors_c(i) = abs(est(3) - c);
