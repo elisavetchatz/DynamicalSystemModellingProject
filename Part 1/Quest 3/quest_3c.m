@@ -2,7 +2,7 @@ clc; clear; close all;
 addpath('C:\Users\30690\DynamicalSystemModellingandSimulation-Projects\Part 1')
 addpath('../Part 1')
 
-qdot_measurable = false; % true -> 2a, false -> 2b
+qdot_measurable = true; % true -> 2a, false -> 2b
 rng(40);  
 
 % System Parameters

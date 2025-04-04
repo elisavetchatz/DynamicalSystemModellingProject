@@ -46,7 +46,7 @@ function estimations = ls_estimation(X, time, qdot_measurable, A0)
 
     fprintf('Parameter Estimation:\n');
     fprintf('L_est = %.4f m\n', L);
-    fprintf('m_est = %.4f kg\n', m);    ''
+    fprintf('m_est = %.4f kg\n', m); 
     fprintf('c_est = %.4f Nm/sec\n', c); 
 
     estimations = [L, m, c];
