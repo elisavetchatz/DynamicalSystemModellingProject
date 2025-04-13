@@ -1,33 +1,33 @@
+%% Quest 1, Task a: Gradient-Steepest Descent Estimation
 
-% === Main Script for Real-Time Estimation Visualization ===
+clear; clc; close all;
 
-clear; clc;
+% Input Parameters
+use_sine = true; % false for constant input (i), true for sinusoidal input (ii)
 
-%% Simulation Parameters
+% Simulation Parameters
 T = 20;
 dt = 0.001;
-m_true = 1.315;
-b_true = 0.225;
-k_true = 0.725;
-use_sine = true;
+t = 0:dt:T;
+m = 1.315;
+b = 0.225;
+k = 0.725;
 
-% Run System Simulation
-[t, x, x_dot, x_ddot, u] = system_dynamics(use_sine, T, dt, m_true, b_true, k_true);
+% System Simulation
+X = system_dynamics(t, x, m, b, k, use_sine);
 
-% Run Gradient Estimator
-[m_hat, b_hat, k_hat, x_hat] = gr_estimation(x, x_dot, x_ddot, u, dt);
 
-% Plot Results
+% Gradient Estimator
+[m_hat, b_hat, k_hat, x_hat] = gr_estimation(X, u, dt);
 ex = x - x_hat;
 
 figure;
-plot(t, x, 'b', t, x_hat, 'r--');
+plot(t, x, 'b', t, x_hat, 'b--');
 legend('x(t)', 'x̂(t)'); title('Actual vs Estimated x(t)'); grid on;
 
 figure;
 plot(t, ex);
 title('Estimation Error e_x(t)'); ylabel('e_x(t)'); xlabel('Time [s]'); grid on;
-
 
 figure;
 plot(t, m_hat, 'r', t, b_hat, 'g', t, k_hat, 'b'); hold on;

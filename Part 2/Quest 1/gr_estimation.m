@@ -6,9 +6,9 @@ function [m_hat, b_hat, k_hat, x_hat] = gr_estimation(X, u, dt)
     x_ddot = X(3,:);
     
     N = length(x);
-    m_hat = zeros(1,N); m_hat(1) = 1;
-    b_hat = zeros(1,N); b_hat(1) = 1;
-    k_hat = zeros(1,N); k_hat(1) = 1;
+    m_hat = zeros(1,N); m_hat(1) = 0;
+    b_hat = zeros(1,N); b_hat(1) = 0;
+    k_hat = zeros(1,N); k_hat(1) = 0;
 
     x_hat = zeros(1,N);
     v_hat = zeros(1,N);
