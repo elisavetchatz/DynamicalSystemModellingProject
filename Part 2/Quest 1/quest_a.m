@@ -1,42 +1,65 @@
 %% Quest 1, Task a: Gradient-Steepest Descent Estimation
+clear;
+close all;
+clc;
 
-clear; clc; close all;
+gamma = 100;
+am = 5;
 
-% Input Parameters
-use_sine = true; % false for constant input (i), true for sinusoidal input (ii)
+% Χρονικό διάστημα
+tspan = 0:0.001:20;
+    
+% Αρχικές συνθήκες: [x; dx; φ1; φ2; φ3; θ̂1; θ̂2; θ̂3]
+x0 = zeros(8,1);
 
-% Simulation Parameters
-T = 20;
-dt = 0.001;
-t = 0:dt:T;
+% Λύση
+[t, X] = ode45(@system_dynamics, tspan, x0);
+
+% Ανάκτηση σημάτων
+x = X(:,1);
+dx = X(:,2);
+phi1 = X(:,3);
+phi2 = X(:,4);
+phi3 = X(:,5);
+th1_hat = X(:,6);
+th2_hat = X(:,7);
+th3_hat = X(:,8);
+
+x_hat = th1_hat .* phi1 + th2_hat .* phi2 + th3_hat .* phi3;
+e = x - x_hat;
+
+% Πραγματικές τιμές:
 m = 1.315;
 b = 0.225;
 k = 0.725;
 
-% System Simulation
-X = system_dynamics(t, x, m, b, k, use_sine);
+theta1_true = -b/m;
+theta2_true = -k/m;
+theta3_true = 1/m;
 
-
-% Gradient Estimator
-[m_hat, b_hat, k_hat, x_hat] = gr_estimation(X, u, dt);
-ex = x - x_hat;
-
+% Plot θέσης
 figure;
-plot(t, x, 'b', t, x_hat, 'b--');
-legend('x(t)', 'x̂(t)'); title('Actual vs Estimated x(t)'); grid on;
-
-figure;
-plot(t, ex);
-title('Estimation Error e_x(t)'); ylabel('e_x(t)'); xlabel('Time [s]'); grid on;
-
-figure;
-plot(t, m_hat, 'r', t, b_hat, 'g', t, k_hat, 'b'); hold on;
-yline(1.315, 'r--', 'm true'); 
-yline(0.225, 'g--', 'b true'); 
-yline(0.725, 'b--', 'k true'); 
-legend('m̂(t)', 'b̂(t)', 'k̂(t)', 'm true', 'b true', 'k true');
-title('Parameter Estimates with True Values');
+plot(t, x, 'b', t, x_hat, 'r--');
+legend('x(t)', 'x̂(t)');
 xlabel('Time [s]');
-ylabel('Estimated Parameters');
-grid on;
+ylabel('Displacement');
+title('x(t) vs x̂(t)');
 
+% Plot σφάλματος
+figure;
+plot(t, e);
+xlabel('Time [s]');
+ylabel('Estimation Error');
+title('Error e(t) = x(t) - x̂(t)');
+
+% Εκτιμήσεις
+figure;
+plot(t, th1_hat, 'r', t, th2_hat, 'g', t, th3_hat, 'b');
+hold on;
+yline(theta1_true, '--r', 'θ₁ true');
+yline(theta2_true, '--g', 'θ₂ true');
+yline(theta3_true, '--b', 'θ₃ true');
+xlabel('Time [s]');
+ylabel('Parameter Estimates');
+legend('θ̂₁', 'θ̂₂', 'θ̂₃');
+title('Parameter Estimation');
