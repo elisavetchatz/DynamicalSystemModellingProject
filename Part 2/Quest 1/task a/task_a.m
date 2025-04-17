@@ -1,10 +1,18 @@
 clc; clear; close all;
 
-dt = 0.0001; 
-t_sim = 0:dt:20;
+sinc_use = false;
 
-%u_func = @(t) 2.5; 
-u_func = @(t) 2.5 * sin(t);
+dt = 0.0001; 
+t_sim = 0:dt:50; 
+
+if sinc_use
+    u_func = @(t) 2.5 * sin(t);
+    u = 2.5 * sin(t_sim(:)); % ensures it's a column
+else 
+    u_func = @(t) 2.5;
+    u = 2.5 * ones(length(t_sim), 1);  % ensures it's a column
+    %u = arrayfun(u_func, t_sim(:));
+end
 
 m = 1.315;
 b = 0.225;
@@ -16,17 +24,13 @@ system_fun = @(t, x) system_dynamics(t, x, m, k, b, u_func);
 
 [t, X] = ode45(system_fun, t_sim, x0);
 x1 = X(:, 1); 
-x2 = X(:, 2); 
-%u = u_func(t_sim);
+x2 = X(:, 2);
 
 %% Parameter estimation using Gradient Method with filtering
 lambda = 1;       % filter constant
 gamma = 100;        % learning rate
 theta0 = [0, 0, 0];
 
-% u = 2.5 * ones(length(t_sim), 1);  % ensures it's a column
-%u = arrayfun(u_func, t_sim(:)); 
-u = 2.5 * sin(t_sim(:)); % ensures it's a column
 [theta_hist, e_hist] = gradient_estimation(X, t_sim, u, lambda, gamma, theta0);
 m_est = theta_hist(end, 1);
 b_est = theta_hist(end, 2);
@@ -42,9 +46,9 @@ disp(x1_est)
 figure;
 % Plot x1 (position)
 subplot(2,1,1);  % 2 rows, 1 column, subplot 1
-plot(t_sim, x1, 'r', 'DisplayName', 'x1 (True)', 'LineWidth', 1.5);
+plot(t_sim, x1, 'b', 'DisplayName', 'x1 (True)', 'LineWidth', 1.5);
 hold on;
-plot(t_sim, x1_est, 'r--', 'DisplayName', 'x1 (Estimated)', 'LineWidth', 1.5);
+plot(t_sim, x1_est, 'b--', 'DisplayName', 'x1 (Estimated)', 'LineWidth', 1.5);
 xlabel('Time [s]');
 ylabel('x1 (Position)');
 title('x1: True vs Estimated');
@@ -72,7 +76,7 @@ grid on;
 subplot(3,1,2);
 plot(t_sim, x2-x2_est, 'm', 'LineWidth', 2);
 xlabel('Time [sec]'); ylabel('Error e_{q̇}(t)');
-title('Estimation Error in Angular Velocity: e_{q̇}(t) = q̇(t) − q̇̂(t)');
+title('Estimation Error in Angular Velocity');
 grid on;
 subplot(3,1,3);
 plot(t, u, 'k', 'LineWidth', 2);
@@ -80,26 +84,37 @@ xlabel('Time [sec]'); ylabel('u(t) [Nm]');
 title('Control Input u(t)');
 grid on;
 
-figure;
-plot(t_sim, theta_hist(:,1), 'r', 'DisplayName', 'Estimated m', 'LineWidth', 1.5);
+figure('Name','Parameter Estimation History','NumberTitle','off');
+% 1. m parameter
+subplot(3,1,1);
+plot(t_sim, theta_hist(:,1), 'r', 'LineWidth', 1.5);
 hold on;
-plot(t_sim, theta_hist(:,2), 'g', 'DisplayName', 'Estimated b', 'LineWidth', 1.5);
-plot(t_sim, theta_hist(:,3), 'b', 'DisplayName', 'Estimated k', 'LineWidth', 1.5);
-yline(m, '--r', 'DisplayName', 'True m', 'LineWidth', 1.5);
-yline(b, '--g', 'DisplayName', 'True b', 'LineWidth', 1.5);
-yline(k, '--b', 'DisplayName', 'True k', 'LineWidth', 1.5);
+yline(m, '--r', 'LineWidth', 1.5);
 xlabel('Time [s]');
-ylabel('Parameter Estimate');
-title('Parameter Estimation using Gradient Method');
-legend;
+ylabel('\hat{m}(t)');
+title('Estimation of Mass Parameter m(t)');
+legend({'Estimated m', 'True m'});
 grid on;
-
-% figure;
-% plot(t_sim, e_hist, 'k', 'LineWidth', 1.5);
-% xlabel('Time [s]');
-% ylabel('Prediction Error');
-% title('Prediction Error over Time');
-% grid on;
+% 2. b parameter
+subplot(3,1,2);
+plot(t_sim, theta_hist(:,2), 'g', 'LineWidth', 1.5);
+hold on;
+yline(b, '--g', 'LineWidth', 1.5);
+xlabel('Time [s]');
+ylabel('\hat{b}(t)');
+title('Estimation of Damping Parameter b(t)');
+legend({'Estimated b', 'True b'});
+grid on;
+% 3. k parameter
+subplot(3,1,3);
+plot(t_sim, theta_hist(:,3), 'b', 'LineWidth', 1.5);
+hold on;
+yline(k, '--b', 'LineWidth', 1.5);
+xlabel('Time [s]');
+ylabel('\hat{k}(t)');
+title('Estimation of Stiffness Parameter k(t)');
+legend({'Estimated k', 'True k'});
+grid on;
 
 % %% Sweep over different gamma values
 % gamma_vals = [0.1, 0.5, 1, 2, 5, 10, 20, 50, 100];
@@ -124,39 +139,3 @@ grid on;
 % title('Effect of \gamma on Parameter Estimation Error');
 % legend;
 % grid on;
-
-% %% Sweep over different initial values of θ0
-% init_vals = [0.5, 1, 2];  % test each value for all theta
-% combinations = combvec(init_vals, init_vals, init_vals)';  % all combos
-% n_combos = size(combinations, 1);
-% final_thetas = zeros(n_combos, 3);
-% errors = zeros(n_combos, 3);
-
-% for i = 1:n_combos
-%     theta0 = combinations(i, :);
-%     [theta_hist, ~] = gradient_estimation(X, t_sim, u, lambda, gamma, theta0);
-%     final_thetas(i, :) = theta_hist(end, :);
-
-%     errors(i, :) = abs(final_thetas(i,:) - [m_true, b_true, k_true]);
-% end
-
-% % Display Results
-% disp('Initial θ0     -->      Final Estimate     -->     Abs Error');
-% for i = 1:n_combos
-%     fprintf('[%.2f %.2f %.2f]   -->   [%.4f %.4f %.4f]   -->   [%.4f %.4f %.4f]\n', ...
-%         combinations(i,1), combinations(i,2), combinations(i,3), ...
-%         final_thetas(i,1), final_thetas(i,2), final_thetas(i,3), ...
-%         errors(i,1), errors(i,2), errors(i,3));
-% end
-
-% % 3D Plot of estimation error vs θ0
-% figure;
-% scatter3(combinations(:,1), combinations(:,2), combinations(:,3), ...
-%     80, vecnorm(errors,2,2), 'filled');
-% xlabel('\theta_0(1) = m̂_0');
-% ylabel('\theta_0(2) = b̂_0');
-% zlabel('\theta_0(3) = k̂_0');
-% title('Total Estimation Error vs Initial \theta_0');
-% colorbar;
-% grid on;
-
