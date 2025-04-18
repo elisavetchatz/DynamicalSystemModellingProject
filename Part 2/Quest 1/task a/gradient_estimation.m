@@ -1,4 +1,4 @@
-function [theta_hist, e_hist] = gradient_estimation(X, t, u, lambda, gamma, theta0)
+function [x_hat, xdot_hat, theta_hist, e_hist] = gradient_estimation(X, t, u, lambda, gamma, theta0)
     % gradient_estimation - Real-time parameter estimation using Gradient Descent with filtering
     %
     % Inputs:
@@ -22,11 +22,10 @@ function [theta_hist, e_hist] = gradient_estimation(X, t, u, lambda, gamma, thet
 
         % initial parameter estimates [m, b, k]
         if nargin < 6
-            theta_hat = zeros(3, 1);  % default: start at [0; 0; 0]
+            theta_hat = [1, 0, 0];  % default: start at [0; 0; 0]
         else
             theta_hat = theta0(:);   % user-defined initial estimate
         end
-        
     
         % Define Lambda(s) = (s + lambda)^2
         syms s
@@ -60,9 +59,29 @@ function [theta_hist, e_hist] = gradient_estimation(X, t, u, lambda, gamma, thet
             e_hist(i) = error;
         end
     
-        % Final parameter report
-        fprintf('Final Parameter Estimates:\n');
-        fprintf('m_hat = %.4f kg\n', theta_hat(1));
-        fprintf('b_hat = %.4f Ns/m\n', theta_hat(2));
-        fprintf('k_hat = %.4f N/m\n', theta_hat(3));
+        % Reconstruct x_hat from the estimated parameters
+        % using the actual input u(t)
+        x_hat(1) = x(1);
+        xdot_hat(1) = xdot(1);  % or 0 if no measurement
+
+    for i = 2:N
+        m_hat = theta_hist(i-1,1);
+        b_hat = theta_hist(i-1,2);
+        k_hat = theta_hist(i-1,3);
+
+        if abs(m_hat) < 1e-4
+            m_hat = sign(m_hat) * 1e-4;
+        end
+
+        xddot_hat = (1 / m_hat) * (u(i-1) - b_hat * xdot_hat(i-1) - k_hat * x_hat(i-1));
+        xdot_hat(i) = xdot_hat(i-1) + dt * xddot_hat;
+        x_hat(i) = x_hat(i-1) + dt * xdot_hat(i-1);
     end
+
+    % Final printout (optional)
+    fprintf('Final Parameter Estimates:\n');
+    fprintf('m̂ = %.4f kg\n', theta_hat(1));
+    fprintf('b̂ = %.4f Ns/m\n', theta_hat(2));
+    fprintf('k̂ = %.4f N/m\n', theta_hat(3));
+
+end

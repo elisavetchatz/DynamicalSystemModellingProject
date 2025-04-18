@@ -1,4 +1,5 @@
-function [theta_hist, x_hat, ex] = lyap_estimation_mixed(t, u, x, xdot, lambda, gamma, theta0)
+function [x_hat, theta_hist, ex] = lyap_estimation_mixed(t, u, x, theta0, gamma, lambda)
+     
     dt = t(2) - t(1);
     N = length(t);
 
@@ -37,8 +38,8 @@ function [theta_hist, x_hat, ex] = lyap_estimation_mixed(t, u, x, xdot, lambda, 
         m_hat = theta_hist(i-1,1);
         b_hat = theta_hist(i-1,2);
         k_hat = theta_hist(i-1,3);
-        x_ddot_hat = (1/m_hat)*(u(i-1) - b_hat * xdot_hat(i-1) - k_hat * x_hat(i-1));
-        xdot_hat(i) = xdot_hat(i-1) + dt * x_ddot_hat;
+        xddot_hat = (1/m_hat)*(u(i-1) - b_hat * xdot_hat(i-1) - k_hat * x_hat(i-1));
+        xdot_hat(i) = xdot_hat(i-1) + dt * xddot_hat;
         x_hat(i) = x_hat(i-1) + dt * xdot_hat(i-1);
     end
 end

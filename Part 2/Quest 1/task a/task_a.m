@@ -3,7 +3,7 @@ clc; clear; close all;
 sinc_use = false;
 
 dt = 0.0001; 
-t_sim = 0:dt:50; 
+t_sim = 0:dt:20; 
 
 if sinc_use
     u_func = @(t) 2.5 * sin(t);
@@ -22,25 +22,24 @@ x0 = [0; 0];
 
 system_fun = @(t, x) system_dynamics(t, x, m, k, b, u_func);
 
-[t, X] = ode45(system_fun, t_sim, x0);
+[t_sim, X] = ode45(system_fun, t_sim, x0);
 x1 = X(:, 1); 
 x2 = X(:, 2);
 
 %% Parameter estimation using Gradient Method with filtering
 lambda = 1;       % filter constant
 gamma = 100;        % learning rate
-theta0 = [0, 0, 0];
+theta0 = [1, 0, 0];
 
-[theta_hist, e_hist] = gradient_estimation(X, t_sim, u, lambda, gamma, theta0);
+[x1_est, x2_est, theta_hist, e_hist] = gradient_estimation(X, t_sim, u, lambda, gamma, theta0);
 m_est = theta_hist(end, 1);
 b_est = theta_hist(end, 2);
 k_est = theta_hist(end, 3);
 
-system_fun_est = @(t, x) system_dynamics(t, x, m_est, k_est, b_est, u_func);
-[t_est, X_est] = ode45(system_fun_est, t_sim, x0);
-x1_est = X_est(:, 1);
-x2_est = X_est(:, 2);
-disp(x1_est)
+% system_fun_est = @(t, x) system_dynamics(t, x, m_est, k_est, b_est, u_func);
+% [t_est, X_est] = ode45(system_fun_est, t_sim, x0);
+% x1_est = X_est(:, 1);
+% x2_est = X_est(:, 2);
 
 %% Plot results
 figure;
@@ -66,23 +65,23 @@ legend;
 grid on;
 sgtitle('State Variables: True vs Estimated');  % super title για όλο το figure
 
-% Plot of estimation errors and input
-figure;
-subplot(3,1,1);
-plot(t_sim, x1-x1_est, 'r', 'LineWidth', 2);
-xlabel('Time [sec]'); ylabel('Error e_x(t)');
-title('Estimation Error in Angle)');
-grid on;
-subplot(3,1,2);
-plot(t_sim, x2-x2_est, 'm', 'LineWidth', 2);
-xlabel('Time [sec]'); ylabel('Error e_{q̇}(t)');
-title('Estimation Error in Angular Velocity');
-grid on;
-subplot(3,1,3);
-plot(t, u, 'k', 'LineWidth', 2);
-xlabel('Time [sec]'); ylabel('u(t) [Nm]');
-title('Control Input u(t)');
-grid on;
+% % Plot of estimation errors and input
+% figure;
+% subplot(3,1,1);
+% plot(t_sim, x1-x1_est, 'r', 'LineWidth', 2);
+% xlabel('Time [sec]'); ylabel('Error e_x(t)');
+% title('Estimation Error in Angle)');
+% grid on;
+% subplot(3,1,2);
+% plot(t_sim, x2-x2_est, 'm', 'LineWidth', 2);
+% xlabel('Time [sec]'); ylabel('Error e_{q̇}(t)');
+% title('Estimation Error in Angular Velocity');
+% grid on;
+% subplot(3,1,3);
+% plot(t_sim, u, 'k', 'LineWidth', 2);
+% xlabel('Time [sec]'); ylabel('u(t) [Nm]');
+% title('Control Input u(t)');
+% grid on;
 
 figure('Name','Parameter Estimation History','NumberTitle','off');
 % 1. m parameter
