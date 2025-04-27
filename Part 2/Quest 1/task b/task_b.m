@@ -14,7 +14,7 @@ k_real = 0.725;
 h0 = 0.25;
 f0 = 20;
 
-Thetam = diag([5, 10]);   % π.χ. 5 για position error, 10 για velocity error
+Thetam = diag([5, 10]);   % να κανω tuning
 
 % Simulation settings
 time = 0:0.01:20;            
