@@ -1,33 +1,52 @@
-function [x_hat, theta_hist, ex] = lyap_estimation_parallel(t, u, x_true, theta0, gamma, x0)
+function sys_out = lyap_estimation_parallel(t, var, mode)
+
+    global m_real b_real k_real G u h
     
-    dt = t(2) - t(1);
-    N = length(t);
-
-    x_hat = zeros(N, 1);
-    xdot_hat = zeros(N, 1);
-    theta_hat = theta0(:);  % [m, b, k]
-    theta_hist = zeros(N, 3);
-    ex = zeros(N, 1);
-
-    % Initial conditions
-    x_hat(1) = x0(1);  
-    xdot_hat(1) = x0(2);  
-
-    for i = 2:N
-        m_hat = theta_hat(1);
-        b_hat = theta_hat(2);
-        k_hat = theta_hat(3);
-
-        xddot_hat = (1 / m_hat) * (u(i-1) - b_hat * xdot_hat(i-1) - k_hat * x_hat(i-1));
-
-        xdot_hat(i) = xdot_hat(i-1) + dt * xddot_hat;
-        x_hat(i) = x_hat(i-1) + dt * xdot_hat(i-1);
-
-        ex(i) = x_true(i) - x_hat(i);
-
-        phi = [xddot_hat; xdot_hat(i); x_hat(i)];
-        theta_hat = theta_hat + gamma * phi * ex(i) * dt;
-
-        theta_hist(i, :) = theta_hat';
+    sys_out = zeros(length(var),1);
+    
+    % System true parameters
+    % (if you want disturbance h(t))
+    if mode == 0
+        x1 = var(1);  % position
+        x2 = var(2);  % velocity
+    elseif mode == 1
+        x1 = var(1) + h(t); 
+        x2 = var(2) + h(t);
     end
+    
+    % Estimated parameters
+    m_est = var(3);
+    b_est = var(4);
+    k_est = var(5);
+    
+    % Estimated states
+    x1_est = var(6);
+    x2_est = var(7);
+    
+    % True system dynamics
+    x1_dot = x2;
+    x2_dot = (1/m_real) * (-b_real * x2 - k_real * x1 + u(t));
+    
+    % Estimation error (based on velocity)
+    e = x2 - x2_est;
+    
+    % Parameter adaptation laws (Lyapunov-based)
+    m_est_dot = G(1,1) * e * (1/m_est^2) * (b_est*x2_est + k_est*x1_est - u(t));
+    b_est_dot = -G(2,2) * e * (x2_est/m_est);
+    k_est_dot = -G(3,3) * e * (x1_est/m_est);
+    
+    % Estimated system dynamics
+    x1_est_dot = x2_est;
+    x2_est_dot = (1/m_est) * (-b_est*x2_est - k_est*x1_est + u(t));
+    
+    % Fill output derivatives
+    sys_out(1) = x1_dot;
+    sys_out(2) = x2_dot;
+    sys_out(3) = m_est_dot;
+    sys_out(4) = b_est_dot;
+    sys_out(5) = k_est_dot;
+    sys_out(6) = x1_est_dot;
+    sys_out(7) = x2_est_dot;
+    
 end
+    
