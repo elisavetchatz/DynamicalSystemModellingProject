@@ -2,15 +2,19 @@ clear;
 clc;
 close all;
 
-% ----------------------------------
-% Global Variables
-% ----------------------------------
-global m_real b_real k_real G u h
+estimation_mode = "mixed";   % Ή "mixed"
+
+global m_real b_real k_real G u h Thetam 
 
 % True system parameters
 m_real = 1.315;
 b_real = 0.225;
 k_real = 0.725;
+
+h0 = 0.25;
+f0 = 20;
+
+Thetam = diag([5, 10]);   % π.χ. 5 για position error, 10 για velocity error
 
 % Simulation settings
 time = 0:0.01:20;            
@@ -19,7 +23,7 @@ time = 0:0.01:20;
 u = @(t) 2.5*sin(t);          
 
 % No disturbance
-h = @(t) 0;                    
+h = @(t) h0*sin(2*pi*f0*t);                    
 
 % Define candidate initial conditions
 initial_conditions_list = {
@@ -52,7 +56,7 @@ disp(['Total G candidates generated: ', num2str(length(G_candidates))]);
 
 
 % Mode (0 = no disturbance)
-mode = 0;
+mode = 1;
 
 % Storage
 results = [];
@@ -67,8 +71,17 @@ for g_idx = 1:length(G_candidates)
         initial_cond = initial_conditions_list{ic_idx};
 
         % Run simulation
-        [t_out, var_out] = ode45(@(t, var) lyap_estimation_parallel(t, var, mode), time, initial_cond);
-
+        switch estimation_mode
+            case "parallel"
+                ode_func = @(t, var) lyap_estimation_parallel(t, var, mode);
+            case "mixed"
+                ode_func = @(t, var) lyap_estimation_mixed(t, var, mode);
+            otherwise
+                error('Unknown estimation mode selected!');
+        end
+        
+        [t_out, var_out] = ode45(ode_func, time, initial_cond);
+        
         % Extract final estimated parameters
         final_m_est = var_out(end,3);
         final_b_est = var_out(end,4);
@@ -118,7 +131,17 @@ disp(initial_cond);
 % Re-run simulation with best settings
 % ----------------------------------
 
-[t_out, var_out] = ode45(@(t, var) lyap_estimation_parallel(t, var, mode), time, initial_cond);
+switch estimation_mode
+    case "parallel"
+        ode_func = @(t, var) lyap_estimation_parallel(t, var, mode);
+    case "mixed"
+        ode_func = @(t, var) lyap_estimation_mixed(t, var, mode);
+    otherwise
+        error('Unknown estimation mode selected!');
+end
+
+[t_out, var_out] = ode45(ode_func, time, initial_cond);
+
 
 % Extract data
 x1 = var_out(:,1);        

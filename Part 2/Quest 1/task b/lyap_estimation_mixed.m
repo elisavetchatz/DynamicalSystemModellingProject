@@ -1,45 +1,57 @@
-function [x_hat, theta_hist, ex] = lyap_estimation_mixed(t, u, x, theta0, gamma, lambda)
-     
-    dt = t(2) - t(1);
-    N = length(t);
+function sys_out = lyap_estimation_mixed(t, var, mode)
 
-    theta_hat = theta0(:);
-    theta_hist = zeros(N, 3);
-    ex = zeros(N, 1);
-
-    x_hat = zeros(N, 1);
-    xdot_hat = zeros(N, 1);
-
-    % Create filters
-    syms s
-    Lambda = sym2poly((s + lambda)^2);
-    D1 = tf([1 0 0], Lambda);
-    D2 = tf([0 1 0], Lambda);
-    D3 = tf([0 0 1], Lambda);
-
-    phi1 = lsim(D1, x, t);  % approx ddot(x)
-    phi2 = lsim(D2, x, t);  % approx dot(x)
-    phi3 = lsim(D3, x, t);  % approx x
-    yf = lsim(D3, u, t);    % filtered u
-
-    for i = 1:N
-        phi = [phi1(i); phi2(i); phi3(i)];
-        y_hat = phi' * theta_hat;
-        error = yf(i) - y_hat;
-
-        theta_hat = theta_hat + gamma * phi * error * dt;
-
-        theta_hist(i, :) = theta_hat';
-        ex(i) = error;
+    global m_real b_real k_real G Thetam u h
+    
+    sys_out = zeros(length(var),1);  % Δημιουργεί διάνυσμα 7x1
+    
+    % Διαβάζουμε τις πραγματικές καταστάσεις
+    if mode == 0
+        x1 = var(1);  
+        x2 = var(2);  
+    elseif mode == 1
+        x1 = var(1) + h(t);
+        x2 = var(2) + h(t);
     end
-
-    % Reconstruct x_hat via numerical integration
-    for i = 2:N
-        m_hat = theta_hist(i-1,1);
-        b_hat = theta_hist(i-1,2);
-        k_hat = theta_hist(i-1,3);
-        xddot_hat = (1/m_hat)*(u(i-1) - b_hat * xdot_hat(i-1) - k_hat * x_hat(i-1));
-        xdot_hat(i) = xdot_hat(i-1) + dt * xddot_hat;
-        x_hat(i) = x_hat(i-1) + dt * xdot_hat(i-1);
+    
+    % Εκτιμήσεις παραμέτρων
+    m_est = var(3);
+    b_est = var(4);
+    k_est = var(5);
+    
+    % Εκτιμημένες καταστάσεις
+    x1_est = var(6);
+    x2_est = var(7);
+    
+    % Πραγματικό σύστημα
+    x1_dot = x2;
+    x2_dot = (1/m_real) * (-b_real * x2 - k_real * x1 + u(t));
+    
+    % Σφάλματα (και στα δύο states)
+    e1 = x1 - x1_est;   % position error
+    e2 = x2 - x2_est;   % velocity error
+    
+    % Κανόνες προσαρμογής
+    m_est_dot = G(1,1) * e2 * (1/m_est^2) * (b_est*x2 + k_est*x1 - u(t)); % based on e2 (velocity error)
+    b_est_dot = -G(2,2) * e2 * (x2/m_est);
+    k_est_dot = -G(3,3) * e2 * (x1/m_est);
+    
+    % Correction Term for x2_est dynamics
+    correction_term = Thetam(1,1)*e1 + Thetam(2,2)*e2;
+    
+    % Μεικτή τοπολογία για εκτίμηση
+    x1_est_dot = x2_est;
+    x2_est_dot = (1/m_est) * (-b_est*x2 - k_est*x1 + u(t)) + correction_term;
+    
+    % Εξαγωγή παραγώγων
+    sys_out(1) = x1_dot;
+    sys_out(2) = x2_dot;
+    sys_out(3) = m_est_dot;
+    sys_out(4) = b_est_dot;
+    sys_out(5) = k_est_dot;
+    sys_out(6) = x1_est_dot;
+    sys_out(7) = x2_est_dot;
+    
     end
-end
+    
+    
+    
