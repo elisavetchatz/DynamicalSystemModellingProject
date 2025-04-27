@@ -1,140 +1,101 @@
-clc; clear; close all;
+clear
+clc
+close all
 
-sinc_use = false;
+% Χρονική διάταξη
+time = 0:0.0001:20;   % λεπτότερο βήμα για μεγαλύτερη ακρίβεια
 
-dt = 0.0001; 
-t_sim = 0:dt:20; 
+% Ορισμός global μεταβλητών
+global m_real b_real k_real g am u
 
-if sinc_use
-    u_func = @(t) 2.5 * sin(t);
-    u = 2.5 * sin(t_sim(:)); % ensures it's a column
-else 
-    u_func = @(t) 2.5;
-    u = 2.5 * ones(length(t_sim), 1);  % ensures it's a column
-    %u = arrayfun(u_func, t_sim(:));
-end
+% Πραγματικές τιμές συστήματος
+m_real = 1.315;
+b_real = 0.225;
+k_real = 0.725;
 
-m = 1.315;
-b = 0.225;
-k = 0.725;
+% Ορισμός εισόδου
+u = @(t) 2.5;           % Σταθερή είσοδος
+%u = @(t) 2.5*sin(t);    % Ημιτονοειδής είσοδος
 
-x0 = [0; 0];
+% Παράμετροι εκτιμητή
+g = 100;              % ρυθμός προσαρμογής (learning rate)
+am = 3;               % πόλος φίλτρου
 
-system_fun = @(t, x) system_dynamics(t, x, m, k, b, u_func);
+% Αρχικές συνθήκες
+% [x1, x2, phi1, phi2, phi3, theta1_est, theta2_est, theta3_est]
+initial_cond = [0 0 0 0 0 0 0 0];
 
-[t_sim, X] = ode45(system_fun, t_sim, x0);
-x1 = X(:, 1); 
-x2 = X(:, 2);
+% Λύση συστήματος με ODE45
+[t_out, var_out] = ode45(@(t, var) gradient_estimation(t, var), time, initial_cond);
 
-%% Parameter estimation using Gradient Method with filtering
-lambda = 1;       % filter constant
-gamma = 100;        % learning rate
-theta0 = [1, 0, 0];
+% Ανάθεση μεταβλητών
+x1 = var_out(:,1);          % Θέση
+x2 = var_out(:,2);          % Ταχύτητα
+phi1 = var_out(:,3);        % Φίλτρο του x
+phi2 = var_out(:,4);        % Φίλτρο του x'
+phi3 = var_out(:,5);        % Φίλτρο του u
+theta1_est = var_out(:,6);  % Εκτίμηση m
+theta2_est = var_out(:,7);  % Εκτίμηση b
+theta3_est = var_out(:,8);  % Εκτίμηση k
 
-[x1_est, x2_est, theta_hist, e_hist] = gradient_estimation(X, t_sim, u, lambda, gamma, theta0);
-m_est = theta_hist(end, 1);
-b_est = theta_hist(end, 2);
-k_est = theta_hist(end, 3);
+% Υπολογισμός εκτίμησης εξόδου
+x2_est = theta1_est.*phi1 + theta2_est.*phi2 + theta3_est.*phi3;
 
-% system_fun_est = @(t, x) system_dynamics(t, x, m_est, k_est, b_est, u_func);
-% [t_est, X_est] = ode45(system_fun_est, t_sim, x0);
-% x1_est = X_est(:, 1);
-% x2_est = X_est(:, 2);
+% Πραγματικές σταθερές
+m_vec = m_real * ones(size(t_out));
+b_vec = b_real * ones(size(t_out));
+k_vec = k_real * ones(size(t_out));
 
-%% Plot results
-figure;
-% Plot x1 (position)
-subplot(2,1,1);  % 2 rows, 1 column, subplot 1
-plot(t_sim, x1, 'b', 'DisplayName', 'x1 (True)', 'LineWidth', 1.5);
+%% PLOTS
+
+figure
+plot(t_out, x2, 'b-', 'LineWidth', 1.5, 'DisplayName', '$x_2(t)$ True');
 hold on;
-plot(t_sim, x1_est, 'b--', 'DisplayName', 'x1 (Estimated)', 'LineWidth', 1.5);
+plot(t_out, x2_est, 'g--', 'LineWidth', 1.5, 'DisplayName', '$\hat{x}_2(t)$ Estimated');
 xlabel('Time [s]');
-ylabel('x1 (Position)');
-title('x1: True vs Estimated');
-legend;
-grid on;
-% Plot x2 (velocity)
-subplot(2,1,2);  % subplot 2
-plot(t_sim, x2, 'g', 'DisplayName', 'x2 (True)', 'LineWidth', 1.5);
-hold on;
-plot(t_sim, x2_est, 'g--', 'DisplayName', 'x2 (Estimated)', 'LineWidth', 1.5);
-xlabel('Time [s]');
-ylabel('x2 (Velocity)');
-title('x2: True vs Estimated');
-legend;
-grid on;
-sgtitle('State Variables: True vs Estimated');  % super title για όλο το figure
+ylabel('$x_2(t)$','Interpreter','latex');
+title('Actual vs Estimated Output $x_2(t)$','Interpreter','latex');
+legend('Interpreter','latex','Location','best');
+grid on
+sgtitle('Actual vs Estimated Output','Interpreter','latex','FontSize',18);
 
-% % Plot of estimation errors and input
-% figure;
-% subplot(3,1,1);
-% plot(t_sim, x1-x1_est, 'r', 'LineWidth', 2);
-% xlabel('Time [sec]'); ylabel('Error e_x(t)');
-% title('Estimation Error in Angle)');
-% grid on;
-% subplot(3,1,2);
-% plot(t_sim, x2-x2_est, 'm', 'LineWidth', 2);
-% xlabel('Time [sec]'); ylabel('Error e_{q̇}(t)');
-% title('Estimation Error in Angular Velocity');
-% grid on;
-% subplot(3,1,3);
-% plot(t_sim, u, 'k', 'LineWidth', 2);
-% xlabel('Time [sec]'); ylabel('u(t) [Nm]');
-% title('Control Input u(t)');
-% grid on;
 
-figure('Name','Parameter Estimation History','NumberTitle','off');
-% 1. m parameter
-subplot(3,1,1);
-plot(t_sim, theta_hist(:,1), 'r', 'LineWidth', 1.5);
-hold on;
-yline(m, '--r', 'LineWidth', 1.5);
-xlabel('Time [s]');
-ylabel('\hat{m}(t)');
-title('Estimation of Mass Parameter m(t)');
-legend({'Estimated m', 'True m'});
-grid on;
-% 2. b parameter
-subplot(3,1,2);
-plot(t_sim, theta_hist(:,2), 'g', 'LineWidth', 1.5);
-hold on;
-yline(b, '--g', 'LineWidth', 1.5);
-xlabel('Time [s]');
-ylabel('\hat{b}(t)');
-title('Estimation of Damping Parameter b(t)');
-legend({'Estimated b', 'True b'});
-grid on;
-% 3. k parameter
-subplot(3,1,3);
-plot(t_sim, theta_hist(:,3), 'b', 'LineWidth', 1.5);
-hold on;
-yline(k, '--b', 'LineWidth', 1.5);
-xlabel('Time [s]');
-ylabel('\hat{k}(t)');
-title('Estimation of Stiffness Parameter k(t)');
-legend({'Estimated k', 'True k'});
-grid on;
+figure
+plot(t_out, x2 - x2_est, 'r', 'LineWidth', 1.5);
+xlabel('Time [s]')
+ylabel('Error $e_x(t)$','Interpreter','latex')
+title('Error between Actual and Estimated Output','Interpreter','latex')
+grid on
 
-% %% Sweep over different gamma values
-% gamma_vals = [0.1, 0.5, 1, 2, 5, 10, 20, 50, 100];
-% final_errors = zeros(length(gamma_vals), 3);  % [em, eb, ek]
+figure
+subplot(3,1,1)
+plot(t_out, m_vec, 'r','LineWidth', 1.5)
+hold on
+plot(t_out, theta1_est, 'r--','LineWidth', 1.5)
+xlabel('Time [s]')
+ylabel('Mass [kg]')
+legend('$m$','$\hat{m}$','Interpreter','latex')
+grid on
+title('Mass estimation','Interpreter','latex')
 
-% for i = 1:length(gamma_vals)
-%     gamma = gamma_vals(i);
-%     [theta_hist, ~] = gradient_estimation(X, t_sim, u, lambda, gamma);
-%     theta_final = theta_hist(end, :);
-%     final_errors(i, 1) = abs(theta_final(1) - m);
-%     final_errors(i, 2) = abs(theta_final(2) - b);
-%     final_errors(i, 3) = abs(theta_final(3) - k);
-% end
-% % Plot: Estimation Error vs Gamma
-% figure;
-% semilogx(gamma_vals, final_errors(:,1), '-o', 'DisplayName','|m̂ - m|', 'Color', 'r', 'LineWidth', '1.5');
-% hold on;
-% semilogx(gamma_vals, final_errors(:,2), '-s', 'DisplayName','|b̂ - b|', 'Color', 'g', 'LineWidth', '1.5');
-% semilogx(gamma_vals, final_errors(:,3), '-d', 'DisplayName','|k̂ - k|', 'Color', 'b', 'LineWidth', '1.5');
-% xlabel('\gamma (Learning Rate)');
-% ylabel('Absolute Estimation Error');
-% title('Effect of \gamma on Parameter Estimation Error');
-% legend;
-% grid on;
+subplot(3,1,2)
+plot(t_out, b_vec, 'g','LineWidth', 1.5)
+hold on
+plot(t_out, theta2_est, 'g--','LineWidth', 1.5)
+xlabel('Time [s]')
+ylabel('Damping [Ns/m]')
+legend('$b$','$\hat{b}$','Interpreter','latex')
+grid on
+title('Damping estimation','Interpreter','latex')
+
+subplot(3,1,3)
+plot(t_out, k_vec, 'b','LineWidth', 1.5)
+hold on
+plot(t_out, theta3_est, 'b--','LineWidth', 1.5)
+xlabel('Time [s]')
+ylabel('Spring constant [N/m]')
+legend('$k$','$\hat{k}$','Interpreter','latex')
+grid on
+title('Spring constant estimation','Interpreter','latex')
+
+sgtitle('Real vs Estimated Parameters','Interpreter','latex','FontSize',18)
