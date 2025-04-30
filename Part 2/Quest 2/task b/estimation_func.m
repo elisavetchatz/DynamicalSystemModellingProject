@@ -35,5 +35,5 @@ function sys_out = estimation_func(t, var, mode)
     
     sys_out(3:6) = theta_dot;
     
-    end
+end
     
