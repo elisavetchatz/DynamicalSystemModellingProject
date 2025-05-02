@@ -11,6 +11,7 @@ k_real = 0.725;
 
 % Simulation settings
 time = 0:0.001:20; 
+u_type = 'u(t) = 2.5';     %'u(t) = 2.5sin(t)'
 u = @(t) 2.5;          
 %u = @(t) 2.5*sin(t);
 
@@ -60,14 +61,14 @@ ylabel('Output');
 title('Actual vs Estimated Output $x(t)$','Interpreter','latex');
 legend('Interpreter','latex','Location','best');
 grid on;
-sgtitle(['Output Comparison – ' u_type ', ' chosen_label],'Interpreter','latex','FontSize',18);
+sgtitle(['Output Comparison – ' u_type ],'Interpreter','latex','FontSize',18);
 
 % 2. Error e_x(t)
 figure;
 plot(t_out, error_x2, 'k-', 'LineWidth', 1.5);
 xlabel('Time [s]');
 ylabel('Error');
-title(['Estimation Error $e_x(t)$ – ' u_type ', ' chosen_label],'Interpreter','latex');
+title(['Estimation Error $e_x(t)$ – ' u_type ],'Interpreter','latex');
 grid on;
 
 % 3. Parameter Estimations
@@ -103,4 +104,4 @@ title('Spring Constant Estimation $\hat{k}(t)$','Interpreter','latex');
 legend({'$\hat{k}$ estimated','$k$ true'},'Interpreter','latex');
 grid on;
 
-sgtitle(['Parameter Estimation History – ' u_type ', ' chosen_label],'Interpreter','latex','FontSize',18);
+sgtitle(['Parameter Estimation History – ' u_type ],'Interpreter','latex','FontSize',18);
