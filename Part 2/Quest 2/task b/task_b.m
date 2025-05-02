@@ -1,127 +1,80 @@
-clear;
-clc;
-close all;
+clear; clc; close all;
 
-%% Global parameters
-global a1 a2 a3 b G u
+%% === TRUE SYSTEM PARAMETERS ===
+theta_true = [-1.315; -0.725; 0.225; 1.175];
 
-% True system parameters
-a1 = 1.315;
-a2 = 0.725;
-a3 = 0.225;
-b  = 1.175;
+% === Learning Rates (Gamma Matrix) ===
+Gamma = diag([20, 20, 50, 20]);
 
-% Simulation time
-time = 0:0.1:20;    
+% === Observer Gain ===
+observer_gain = 50;
 
-% Input signal
-u = @(t) 2.5*sin(t);
+% === Control Parameters ===
+phi_0 = 0.3;
+phi_inf = 0.01;
+lambda = 1.5;
 
-% Initial conditions
-% [r(0) r_dot(0) theta1_hat(0) theta2_hat(0) theta3_hat(0) theta4_hat(0)]
-initial_cond = [0 0 0 0 0 0];
+rho = 3;
+k_alpha = 8;
+k_beta = 8;
 
-% Mode: 0 (no disturbance)
-mode = 0;
+% === Simulation Parameters ===
+sim_time = [0 20];
+desired_angle = pi/10;
 
-%% --- Manual Gain Matrix G ---
-G = diag([10, 10, 10, 10]);  % Μπορείς να αλλάξεις αυτές τις τιμές χειροκίνητα
+% === Initial Conditions ===
+% [x1, x2, x1_hat, x2_hat, theta1_hat, ..., theta4_hat]
+x_init = zeros(8,1);
+x_init(1) = 0.1;   % x1 = r
+x_init(2) = 0.05;  % x2 = r_dot
+x_init(5:8) = [-1.5; -0.2; 0.2; -5];
 
-%% --- Simulation with Manual G ---
+% === Solver Options ===
+options = odeset('RelTol',1e-3, 'AbsTol',1e-5);
 
-[t_out, var_out] = ode45(@(t,var) estimation_func(t,var,mode), time, initial_cond);
+[t, state] = ode45(@(t, x) estimation_func(t, x, theta_true, Gamma, observer_gain, ...
+                            phi_0, phi_inf, lambda, rho, k_alpha, k_beta, desired_angle), ...
+                            sim_time, x_init, options);
 
-% Extract
-r = var_out(:,1);
-r_dot = var_out(:,2);
-theta1_hat = var_out(:,3);
-theta2_hat = var_out(:,4);
-theta3_hat = var_out(:,5);
-theta4_hat = var_out(:,6);
+% === Output Processing ===
+x_real = state(:,1);
+x_est  = state(:,3);
+theta_est = state(:,5:8);
+estimation_error = x_real - x_est;
+final_theta = theta_est(end,:);
 
-theta_hat = [theta1_hat, theta2_hat, theta3_hat, theta4_hat];
-
-% True parameters
-theta_true = [-a1; -a2; a3; b];
-
-% Regressors
-phi1 = r_dot;
-phi2 = sin(r);
-phi3 = (r_dot).^2 .* sin(2*r);
-phi4 = arrayfun(u, t_out);
-
-phi = [phi1, phi2, phi3, phi4];
-
-% Estimated output
-r_ddot_est = sum(theta_hat .* phi, 2);
-
-% Real output
-r_ddot_true = zeros(size(t_out));
-for i = 1:length(t_out)
-    r_ddot_true(i,1) = system_dynamics(t_out(i), [r(i); r_dot(i)], mode);
+fprintf('\n--- Final Parameter Estimates ---\n');
+for i = 1:4
+    fprintf('True θ_%d = %.4f, Estimated θ_%d = %.4f\n', ...
+        i, theta_true(i), i, final_theta(i));
 end
 
-% Estimated r(t) by double integration
-r_est = cumtrapz(t_out, cumtrapz(t_out, r_ddot_est));
+%% === PLOTS ===
 
-% Error
-e_r = r - r_est;
-
-%% --- Plotting ---
-
-% 1. r(t) vs r̂(t)
+% 1. Real vs Estimated State
 figure;
-plot(t_out, r, 'b-', 'LineWidth', 1.5, 'DisplayName', '$r(t)$ Actual');
-hold on;
-plot(t_out, r_est, 'r--', 'LineWidth', 1.5, 'DisplayName', '$\hat{r}(t)$ Estimated');
-xlabel('Time [s]');
-ylabel('Roll Angle [rad]');
-legend('Interpreter','latex','Location','best');
-title('Actual vs Estimated Roll Angle','Interpreter','latex');
+plot(t, x_real, 'b', 'LineWidth', 2); hold on;
+plot(t, x_est, 'r--', 'LineWidth', 2);
+xlabel('Time [s]'); ylabel('Roll Angle [rad]');
+title('Real vs Estimated Roll Angle');
 grid on;
-sgtitle('Roll Angle Tracking','Interpreter','latex','FontSize',18);
 
-% 2. Error plot
+% 2. Estimation Error
 figure;
-plot(t_out, e_r, 'k-', 'LineWidth', 1.5);
+plot(t, estimation_error, 'k', 'LineWidth', 2);
 xlabel('Time [s]');
-ylabel('Tracking Error [rad]');
-title('Error $e_r(t) = r(t) - \hat{r}(t)$','Interpreter','latex');
+ylabel('Estimation Error [rad]');
+title('Error e(t) = x_1(t) - x̂_1(t)');
 grid on;
 
-% 3. Parameter estimation
+% 3. Parameter Estimations
 figure;
-subplot(4,1,1);
-plot(t_out, theta1_hat, 'r', 'LineWidth', 1.5);
-hold on;
-yline(theta_true(1), '--r');
-ylabel('$\theta_1$','Interpreter','latex');
-legend('Estimated','True','Interpreter','latex');
-grid on;
-
-subplot(4,1,2);
-plot(t_out, theta2_hat, 'g', 'LineWidth', 1.5);
-hold on;
-yline(theta_true(2), '--g');
-ylabel('$\theta_2$','Interpreter','latex');
-legend('Estimated','True','Interpreter','latex');
-grid on;
-
-subplot(4,1,3);
-plot(t_out, theta3_hat, 'b', 'LineWidth', 1.5);
-hold on;
-yline(theta_true(3), '--b');
-ylabel('$\theta_3$','Interpreter','latex');
-legend('Estimated','True','Interpreter','latex');
-grid on;
-
-subplot(4,1,4);
-plot(t_out, theta4_hat, 'm', 'LineWidth', 1.5);
-hold on;
-yline(theta_true(4), '--m');
-ylabel('$\theta_4$','Interpreter','latex');
+plot(t, theta_est(:,1), 'r', 'LineWidth', 2); hold on;
+plot(t, theta_est(:,2), 'g', 'LineWidth', 2);
+plot(t, theta_est(:,3), 'b', 'LineWidth', 2);
+plot(t, theta_est(:,4), 'm', 'LineWidth', 2);
 xlabel('Time [s]');
-legend('Estimated','True','Interpreter','latex');
+ylabel('Parameter Estimates');
+title('Adaptive Parameter Convergence');
+legend('\theta_1', '\theta_2', '\theta_3', '\theta_4', 'Interpreter', 'latex');
 grid on;
-
-sgtitle('Parameter Estimations','Interpreter','latex','FontSize',18);

@@ -3,7 +3,7 @@ clc;
 close all;
 
 estimation_mode = "mixed";   % Ή" "mixed" ή "parallel"
-mode = 0; % 0: no disturbance, 1: disturbance
+mode = 1; % 0: no disturbance, 1: disturbance
 
 % True system parameters
 m_real = 1.315;

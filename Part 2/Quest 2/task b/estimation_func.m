@@ -1,39 +1,49 @@
-function sys_out = estimation_func(t, var, mode)
+function dx = adaptive_roll_estimator(t, x, theta, Gamma, obs_gain, ...
+    phi_0, phi_inf, lambda, rho, ...
+    k_alpha, k_beta, r_target)
 
-    global G u
-    
-    sys_out = zeros(length(var),1);
-    
-    % Extract states
-    r = var(1);
-    r_dot = var(2);
-    
-    % Estimated parameters
-    theta1_hat = var(3);
-    theta2_hat = var(4);
-    theta3_hat = var(5);
-    theta4_hat = var(6);
-    
-    % Regressor φ(t)
-    phi = [r_dot; sin(r); r_dot^2*sin(2*r); u(t)];
-    
-    % Estimated output
-    r_ddot_est = [theta1_hat; theta2_hat; theta3_hat; theta4_hat]' * phi;
-    
-    % True output (no disturbance)
-    r_ddot_true = system_dynamics(t, [r; r_dot], 0);
-    
-    % Estimation error
-    e = r_ddot_true - r_ddot_est;
-    
-    % Dynamics
-    sys_out(1) = r_dot;        % r_dot
-    sys_out(2) = r_ddot_true;  % r_ddot (real)
-    
-    % Parameter estimation laws
-    theta_dot = G * phi * e;
-    
-    sys_out(3:6) = theta_dot;
-    
+% === State Decomposition ===
+x1 = x(1);  % roll angle
+x2 = x(2);  % roll rate
+x1_hat = x(3);
+x2_hat = x(4);
+theta_hat = x(5:8);
+
+% === Desired Trajectory ===
+r_d = r_target * sin(pi*t/20);
+
+% === Nonlinear Features ===
+f1 = sin(x1);
+f2 = x2^2 * sin(2*x1);
+
+% === Tracking Control Law ===
+phi = (phi_0 - phi_inf)*exp(-lambda*t) + phi_inf;
+z1 = (x1 - r_d) / phi;
+alpha = -k_alpha * log((1 + z1)/(1 - z1));
+
+z2 = (x2 - alpha) / rho;
+control_input = -k_beta * log((1 + z2)/(1 - z2));
+
+% === True System Dynamics ===
+dx1 = x2;
+dx2 = theta(1)*x2 + theta(2)*f1 + theta(3)*f2 + theta(4)*control_input;
+
+% === Estimation Errors ===
+e1 = x1 - x1_hat;
+e2 = x2 - x2_hat;
+
+% === Observer Dynamics ===
+dx1_hat = x2_hat;
+dx2_hat = theta_hat(1)*x2 + theta_hat(2)*f1 + theta_hat(3)*f2 + ...
+theta_hat(4)*control_input + obs_gain*(e1 + e2);
+
+% === Parameter Adaptation Laws ===
+dtheta = Gamma * (e2 * [x2; f1; f2; control_input]);
+
+% === Output Derivative ===
+dx = zeros(8,1);
+dx(1:2) = [dx1; dx2];
+dx(3:4) = [dx1_hat; dx2_hat];
+dx(5:8) = dtheta;
 end
     
