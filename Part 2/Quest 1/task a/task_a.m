@@ -10,21 +10,20 @@ b_real = 0.225;
 k_real = 0.725;
 
 % Simulation settings
-time = 0:0.001:20; 
-u_type = 'u(t) = 2.5';     %'u(t) = 2.5sin(t)'
+time = 0:0.01:20; 
+u_type = 'u(t) = 2.5'; % 'u(t) = 2.5';     %'u(t) = 2.5sin(t)'
 u = @(t) 2.5;          
 %u = @(t) 2.5*sin(t);
 
 %Estimation settings
-g1 = 20;
-g2 = 100;
-g3 = 60;
+g1 = 100;
+g2 = 20;
+g3 = 40;
 G = diag([g1, g2, g3]);
 am = 1; 
-initial_cond = [0; 0; 0; 0; 0; 0; 0; 0]; 
+initial_cond = [1; 1; 0.2; 0.5; 0.8; 0; 0; 0]; % [x1, x2, theta1, theta2, theta3, x1_est, x2_est]
 
 %% Simulate the system
-
 [t_out, var_out] = ode45(@(t, var) gradient_estimation(t, var), time, initial_cond);
 % Extract system states and parameter estimates
 x1 = var_out(:,1);        % Position
@@ -44,64 +43,65 @@ m_est = 1/theta3_est;
 b_est = -theta2_est*m_est; 
 k_est = -theta1_est*m_est; 
 
-%% Plotting results
+disp('Simulation completed!');
+disp(m_est);
+
+%%Plotting results
 % Reference lines for plots
 m_vec = m_real * ones(size(t_out));
 b_vec = b_real * ones(size(t_out));
 k_vec = k_real * ones(size(t_out));
 
-
 % 1. Actual vs Estimated x(t)
 figure;
-plot(t_out, x2, 'b-', 'LineWidth', 1.5, 'DisplayName', '$x(t)$ True');
+plot(t_out, x2, 'b-', 'LineWidth', 1.5, 'DisplayName', 'x(t)-{True}');
 hold on;
-plot(t_out, x2dot_est, 'r--', 'LineWidth', 1.5, 'DisplayName', '$\hat{x}(t)$ Estimated');
-xlabel('Time [s]');
-ylabel('Output');
-title('Actual vs Estimated Output $x(t)$','Interpreter','latex');
-legend('Interpreter','latex','Location','best');
+plot(t_out, x2dot_est, 'r--', 'LineWidth', 1.5, 'DisplayName', 'x_hat-{Estimated}');
+xlabel('Time [s]', 'Interpreter', 'latex');
+ylabel('Output', 'Interpreter', 'latex');
+title(['Actual vs Estimated Output $x(t)$ -- ' u_type], 'Interpreter', 'latex');
+legend('Interpreter', 'latex', 'Location', 'best');
 grid on;
-sgtitle(['Output Comparison – ' u_type ],'Interpreter','latex','FontSize',18);
 
 % 2. Error e_x(t)
 figure;
 plot(t_out, error_x2, 'k-', 'LineWidth', 1.5);
-xlabel('Time [s]');
-ylabel('Error');
-title(['Estimation Error $e_x(t)$ – ' u_type ],'Interpreter','latex');
+xlabel('Time [s]', 'Interpreter', 'latex');
+ylabel('Error', 'Interpreter', 'latex');
+title(['Estimation Error $e_x(t)$ -- ' u_type], 'Interpreter', 'latex');
 grid on;
 
 % 3. Parameter Estimations
-figure('Name','Parameter Estimations','NumberTitle','off');
+figure('Name', 'Parameter Estimations', 'NumberTitle', 'off');
 
 subplot(3,1,1);
 plot(t_out, m_est, 'r-', 'LineWidth', 1.5);
 hold on;
 yline(m_real, '--r', 'LineWidth', 1.5);
-xlabel('Time [s]');
-ylabel('$\hat{m}(t)$','Interpreter','latex');
-title('Mass Estimation $\hat{m}(t)$','Interpreter','latex');
-legend({'$\hat{m}$ estimated','$m$ true'},'Interpreter','latex');
+xlabel('Time [s]', 'Interpreter', 'latex');
+ylabel('$\hat{m}(t)$', 'Interpreter', 'latex');
+title('Mass Estimation $\hat{m}(t)$', 'Interpreter', 'latex');
+legend({'$\hat{m}$ estimated', '$m$ true'}, 'Interpreter', 'latex', 'Location', 'best');
 grid on;
 
 subplot(3,1,2);
-plot(t_out, b_est, 'g-', 'LineWidth', 1.5);
+plot(t_out, b_est, 'g', 'LineWidth', 1.5);
 hold on;
 yline(b_real, '--g', 'LineWidth', 1.5);
-xlabel('Time [s]');
-ylabel('$\hat{b}(t)$','Interpreter','latex');
-title('Damping Estimation $\hat{b}(t)$','Interpreter','latex');
-legend({'$\hat{b}$ estimated','$b$ true'},'Interpreter','latex');
+xlabel('Time [s]', 'Interpreter', 'latex');
+ylabel('$\hat{b}(t)$', 'Interpreter', 'latex');
+title('Damping Estimation $\hat{b}(t)$', 'Interpreter', 'latex');
+legend({'$\hat{b}$ estimated', '$b$ true'}, 'Interpreter', 'latex', 'Location', 'best');
 grid on;
 
 subplot(3,1,3);
-plot(t_out, k_est, 'b-', 'LineWidth', 1.5);
+plot(t_out, k_est, 'b', 'LineWidth', 1.5);
 hold on;
 yline(k_real, '--b', 'LineWidth', 1.5);
-xlabel('Time [s]');
-ylabel('$\hat{k}(t)$','Interpreter','latex');
-title('Spring Constant Estimation $\hat{k}(t)$','Interpreter','latex');
-legend({'$\hat{k}$ estimated','$k$ true'},'Interpreter','latex');
+xlabel('Time [s]', 'Interpreter', 'latex');
+ylabel('$\hat{k}(t)$', 'Interpreter', 'latex');
+title('Spring Constant Estimation $\hat{k}(t)$', 'Interpreter', 'latex');
+legend({'$\hat{k}$ estimated', '$k$ true'}, 'Interpreter', 'latex', 'Location', 'best');
 grid on;
 
-sgtitle(['Parameter Estimation History – ' u_type ],'Interpreter','latex','FontSize',18);
+sgtitle(['Parameter Estimation History -- ' u_type], 'Interpreter', 'latex', 'FontSize', 18);

@@ -24,73 +24,10 @@ initial_cond = [0 0 0 0 0 0];
 % Mode: 0 (no disturbance)
 mode = 0;
 
-%% --- Auto-Tuning Section for G ---
+%% --- Manual Gain Matrix G ---
+G = diag([10, 10, 10, 10]);  % Μπορείς να αλλάξεις αυτές τις τιμές χειροκίνητα
 
-% Candidate gamma values
-gamma_values = linspace(1, 100, 10);   % 8 τιμές από 10 έως 200
-
-best_RMSE = inf;
-best_G = [];
-
-disp('Starting Auto-Tuning for G...');
-
-for g1 = gamma_values
-    for g2 = gamma_values
-        for g3 = gamma_values
-            for g4 = gamma_values
-
-                % Set current G
-                G = diag([g1, g2, g3, g4]);
-
-                % Run simulation
-                [t_out, var_out] = ode45(@(t,var) estimation_func(t,var,mode), time, initial_cond);
-
-                r = var_out(:,1);
-                r_dot = var_out(:,2);
-                theta1_hat = var_out(:,3);
-                theta2_hat = var_out(:,4);
-                theta3_hat = var_out(:,5);
-                theta4_hat = var_out(:,6);
-
-                theta_hat = [theta1_hat, theta2_hat, theta3_hat, theta4_hat];
-
-                phi1 = r_dot;
-                phi2 = sin(r);
-                phi3 = (r_dot).^2 .* sin(2*r);
-                phi4 = arrayfun(u, t_out);
-
-                phi = [phi1, phi2, phi3, phi4];
-
-                % Estimated output
-                r_ddot_est = sum(theta_hat .* phi, 2);
-
-                % Estimated r(t) by double integration
-                r_est = cumtrapz(t_out, cumtrapz(t_out, r_ddot_est));
-
-                % Real r(t)
-                r_true = r;
-
-                % Calculate RMSE
-                RMSE = sqrt(mean((r_true - r_est).^2));
-
-                % Save best G
-                if RMSE < best_RMSE
-                    best_RMSE = RMSE;
-                    best_G = G;
-                end
-            end
-        end
-    end
-end
-
-disp('========= Best G Found =========');
-disp(best_G);
-disp(['Best RMSE = ', num2str(best_RMSE)]);
-
-%% --- Final Simulation with Best G ---
-
-% Set the best G found
-G = best_G;
+%% --- Simulation with Manual G ---
 
 [t_out, var_out] = ode45(@(t,var) estimation_func(t,var,mode), time, initial_cond);
 
@@ -142,7 +79,7 @@ ylabel('Roll Angle [rad]');
 legend('Interpreter','latex','Location','best');
 title('Actual vs Estimated Roll Angle','Interpreter','latex');
 grid on;
-sgtitle('Roll Angle Tracking (Optimized G)','Interpreter','latex','FontSize',18);
+sgtitle('Roll Angle Tracking','Interpreter','latex','FontSize',18);
 
 % 2. Error plot
 figure;
@@ -187,4 +124,4 @@ xlabel('Time [s]');
 legend('Estimated','True','Interpreter','latex');
 grid on;
 
-sgtitle('Parameter Estimations (Optimized G)','Interpreter','latex','FontSize',18);
+sgtitle('Parameter Estimations','Interpreter','latex','FontSize',18);

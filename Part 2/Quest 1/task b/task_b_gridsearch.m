@@ -17,7 +17,7 @@ f0 = 20;
 Thetam = diag([5, 10]);   % να κανω tuning
 
 % Simulation settings
-time = 0:0.01:20;            
+time = 0:0.001:20;            
 
 % System input
 u = @(t) 2.5*sin(t);          
@@ -29,9 +29,7 @@ h = @(t) h0*sin(2*pi*f0*t);
 initial_conditions_list = {
     [0 0 2 0.5 1 0 0], ...
     [0 0 1 0.2 1 0 0], ...
-    [0 0 5 1 2 0 0], ...
-    [0 0 1.5 0.1 0.5 0 0], ...
-    [0 0 3 1 1 0 0]
+
 };
 
 % Define candidate G matrices
@@ -84,14 +82,18 @@ for g_idx = 1:length(G_candidates)
         [t_out, var_out] = ode45(ode_func, time, initial_cond);
         
         % Extract final estimated parameters
-        final_m_est = var_out(end,3);
-        final_b_est = var_out(end,4);
-        final_k_est = var_out(end,5);
+        theta1_hat = var_out(end,3);
+        theta2_hat = var_out(end,4);
+        theta3_hat = var_out(end,5);
+
+        m_est = 1/theta3_hat;
+        b_est = theta2_hat * m_est;
+        k_est = theta3_hat * m_est;
 
         % Absolute errors
-        error_m = abs(m_real - final_m_est);
-        error_b = abs(b_real - final_b_est);
-        error_k = abs(k_real - final_k_est);
+        error_m = abs(m_real - m_est);
+        error_b = abs(b_real - b_est);
+        error_k = abs(k_real - k_est);
 
         % Total absolute error
         total_error = error_m + error_b + error_k;
@@ -146,11 +148,15 @@ end
 % Extract data
 x1 = var_out(:,1);        
 x2 = var_out(:,2);        
-m_est = var_out(:,3);     
-b_est = var_out(:,4);     
-k_est = var_out(:,5);     
+t1 = var_out(:,3);     
+t2 = var_out(:,4);     
+t3 = var_out(:,5);     
 x1_est = var_out(:,6);    
 x2_est = var_out(:,7);    
+
+m_final = 1/t3;
+b_final = t2 * m_final;
+k_final = t3 * m_final;
 
 m_vec = m_real * ones(size(t_out));
 b_vec = b_real * ones(size(t_out));
@@ -209,7 +215,7 @@ sgtitle('Best Case - State Estimation Errors','Interpreter','latex','FontSize',1
 figure('Name','Best Parameter Estimations','NumberTitle','off');
 
 subplot(3,1,1);
-plot(t_out, m_est, 'r-', 'LineWidth', 1.5);
+plot(t_out, m_final, 'r-', 'LineWidth', 1.5);
 hold on;
 yline(m_real, '--r', 'LineWidth', 1.5);
 xlabel('Time [s]');
@@ -219,7 +225,7 @@ legend({'$\hat{m}$ Estimated','$m$ True'},'Interpreter','latex');
 grid on;
 
 subplot(3,1,2);
-plot(t_out, b_est, 'g-', 'LineWidth', 1.5);
+plot(t_out, b_final, 'g-', 'LineWidth', 1.5);
 hold on;
 yline(b_real, '--g', 'LineWidth', 1.5);
 xlabel('Time [s]');
@@ -229,7 +235,7 @@ legend({'$\hat{b}$ Estimated','$b$ True'},'Interpreter','latex');
 grid on;
 
 subplot(3,1,3);
-plot(t_out, k_est, 'b-', 'LineWidth', 1.5);
+plot(t_out, k_final, 'b-', 'LineWidth', 1.5);
 hold on;
 yline(k_real, '--b', 'LineWidth', 1.5);
 xlabel('Time [s]');

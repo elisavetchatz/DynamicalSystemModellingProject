@@ -2,7 +2,8 @@ clear;
 clc;
 close all;
 
-estimation_mode = "parallel";   % Ή" "mixed" ή "parallel"
+estimation_mode = "mixed";   % Ή" "mixed" ή "parallel"
+mode = 0; % 0: no disturbance, 1: disturbance
 
 % True system parameters
 m_real = 1.315;
@@ -20,7 +21,6 @@ u = @(t) 2.5*sin(t);
 
 % disturbance
 h = @(t) h0*sin(2*pi*f0*t); 
-mode = 0; % 0: no disturbance, 1: disturbance
 
 % estimation settings
 Thetam = diag([5, 10]);
