@@ -10,13 +10,13 @@ Gamma = diag([20, 20, 50, 20]);
 observer_gain = 50;
 
 % === Control Parameters ===
-phi_0 = 0.3;
-phi_inf = 0.01;
-lambda = 1.5;
+phi_0 = 1;
+phi_inf = 0.001;
+lambda = 3;
 
-rho = 3;
-k_alpha = 8;
-k_beta = 8;
+rho = 2;
+k_alpha = 10;
+k_beta = 10;
 
 % === Simulation Parameters ===
 sim_time = [0 20];
