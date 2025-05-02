@@ -31,9 +31,9 @@ function sys_out = lyap_estimation_parallel(t, var, mode)
     e = x2 - x2_est;
     
     % Parameter adaptation laws (Lyapunov-based)
-    m_est_dot = G(1,1) * e * (1/m_est^2) * (b_est*x2_est + k_est*x1_est - u(t));
-    b_est_dot = -G(2,2) * e * (x2_est/m_est);
-    k_est_dot = -G(3,3) * e * (x1_est/m_est);
+    theta1_hat_dot = G(1,1) * e * (1/m_est^2) * (b_est*x2_est + k_est*x1_est - u(t));
+    theta2_hat_dot = -G(2,2) * e * (x2_est/m_est);
+    theta3_hat_dot = -G(3,3) * e * (x1_est/m_est);
     
     % Estimated system dynamics
     x1_est_dot = x2_est;
@@ -42,9 +42,9 @@ function sys_out = lyap_estimation_parallel(t, var, mode)
     % Fill output derivatives
     sys_out(1) = x1_dot;
     sys_out(2) = x2_dot;
-    sys_out(3) = m_est_dot;
-    sys_out(4) = b_est_dot;
-    sys_out(5) = k_est_dot;
+    sys_out(3) = theta1_hat_dot;
+    sys_out(4) = theta2_hat_dot;
+    sys_out(5) = theta3_hat_dot;
     sys_out(6) = x1_est_dot;
     sys_out(7) = x2_est_dot;
     

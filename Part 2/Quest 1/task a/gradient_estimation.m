@@ -21,7 +21,7 @@ function etsimations = gradient_estimation(t, var)
     phi3_dot = -am*phi3 + u(t);
 
     x2_hat = theta1_est*phi1 + theta2_est*phi2 + theta3_est*phi3;
-    e = x2 - x2_hat;
+    e = x2 - x2_hat; % μηπως πρεπει να εχω ς1 και ε2;
     
     theta1_est_dot = G(1,1)*e*phi1;
     theta2_est_dot = G(2,2)*e*phi2;

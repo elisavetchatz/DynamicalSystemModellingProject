@@ -110,3 +110,9 @@ ylabel('Tracking Error [rad]');
 title('Tracking Error $e_r(t) = r(t) - r_d(t)$','Interpreter','latex');
 grid on;
 sgtitle('Roll Angle Tracking Error (Optimized)','Interpreter','latex','FontSize',18);
+
+% Starting Auto-Tuning...
+% ========= Best Gains Found =========
+% Best k1 = 50
+% Best k2 = 50
+% Best RMSE = 8.0039e-05
