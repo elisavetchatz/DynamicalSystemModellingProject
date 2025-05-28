@@ -1,8 +1,8 @@
 %% THEMA 1
 
 % Time parameters
-Tsim = 20;
-Tsampl = 0.01;
+Tsim = 30;
+Tsampl = 0.001;
 N = Tsim/Tsampl;
 tvec  = 0:Tsampl:Tsim;
 
@@ -14,11 +14,13 @@ B = [0; 1.5];
 u = @(t) sin(t) + 0.5*cos(3*t);
 
 % Initial conditions
-x0 = [0; 0];
+x0 = [0; 0];  % Initial state
 
 %% Design Estimator
 G = [70, 22, 47, 15, 7, 10];
 z0 = zeros(10, 1);
+z0(1) = x0(1);  % x1 initial condition
+z0(2) = x0(2); % x2 initial condition
 z0(5) = -2;  % a11 in [-3, -1]
 z0(10) = 2; % b2 ≥ 1
 
@@ -55,10 +57,10 @@ grid on;
 % Εκτιμήσεις A
 figure;
 plot(t, a11, 'r', t, a12, 'g', t, a21, 'b', t, a22, 'm'); hold on;
-yline(-2.15, '--r', 'a_{11}^{true}');
-yline(0.25, '--g', 'a_{12}^{true}');
-yline(-0.75, '--b', 'a_{21}^{true}');
-yline(-2.00, '--m', 'a_{22}^{true}');
+yline(-2.15, '--r');
+yline(0.25, '--g');
+yline(-0.75, '--b');
+yline(-2.00, '--m');
 legend('a_{11}','a_{12}','a_{21}','a_{22}', 'Location', 'best');
 title('Εκτιμήσεις A vs Πραγματικές Τιμές');
 xlabel('t [s]'); grid on;
