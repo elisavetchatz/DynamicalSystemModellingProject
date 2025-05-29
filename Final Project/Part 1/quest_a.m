@@ -1,8 +1,8 @@
 %% THEMA 1
 
 % Time parameters
-Tsim = 30;
-Tsampl = 0.001;
+Tsim = 50;
+Tsampl = 0.01;
 N = Tsim/Tsampl;
 tvec  = 0:Tsampl:Tsim;
 
@@ -17,14 +17,15 @@ u = @(t) sin(t) + 0.5*cos(3*t);
 x0 = [0; 0];  % Initial state
 
 %% Design Estimator
-G = [70, 22, 47, 15, 7, 10];
+G = [74, 28, 38, 23, 1, 4]; % a22 check, a12 almost perfect, a11 needs a little mof=dification, a21 αρκετα μακρια
+Thetam = diag([10, 15]);
 z0 = zeros(10, 1);
 z0(1) = x0(1);  % x1 initial condition
 z0(2) = x0(2); % x2 initial condition
 z0(5) = -2;  % a11 in [-3, -1]
 z0(10) = 2; % b2 ≥ 1
 
-[t, z] = ode45(@(t, z) mtopo_proj_estimator(t, z, u, A, B, G), tvec, z0);
+[t, z] = ode45(@(t, z) mtopo_proj_estimator(t, z, u, A, B, G, Thetam), tvec, z0);
 
 x1 = z(:,1);  x2 = z(:,2);
 xhat1 = z(:,3);  xhat2 = z(:,4);
@@ -73,4 +74,24 @@ yline(1.5, '--r', 'b_{2}^{true}');
 legend('b_{1}', 'b_{2}', 'Location', 'best');
 title('Εκτιμήσεις B vs Πραγματικές Τιμές');
 xlabel('t [s]'); grid on;
+
+ea11 = a11 - A(1,1);
+ea12 = a12 - A(1,2);
+ea21 = a21 - A(2,1);
+ea22 = a22 - A(2, 2);
+
+eb1 = b1 - B(1);
+eb2 = b2 - B(2);
+
+figure;
+plot(t, ea11, 'r', t, ea12, 'g', t, ea21, 'b', t, ea22, 'm');
+legend('e_{a11}', 'e_{a12}', 'e_{a21}', 'e_{a22}', 'Location', 'best');
+title('Σφάλματα Εκτίμησης Παραμέτρων A');
+xlabel('t [s]'); ylabel('Σφάλμα'); grid on;
+
+figure;
+plot(t, eb1, 'b', t, eb2, 'r');
+legend('e_{b1}', 'e_{b2}', 'Location', 'best');
+title('Σφάλματα Εκτίμησης Παραμέτρων B');
+xlabel('t [s]'); ylabel('Σφάλμα'); grid on;
 

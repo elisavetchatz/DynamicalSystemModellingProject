@@ -1,4 +1,4 @@
-function zdot = mtopo_proj_estimator(t, z, u, A, B, G)
+function zdot = mtopo_proj_estimator(t, z, u, A, B, G, Thetam)
 
     u = u(t);
     
@@ -17,7 +17,7 @@ function zdot = mtopo_proj_estimator(t, z, u, A, B, G)
     % Estimator dynamics
     Ahat = [a11 a12; a21 a22];
     Bhat = [b1; b2];
-    dxhat = Ahat*xhat + Bhat*u;
+    dxhat = Ahat*xhat + Bhat*u + Thetam * (x - xhat);
 
     % Error dynamics
     ex = x - xhat;
@@ -29,25 +29,20 @@ function zdot = mtopo_proj_estimator(t, z, u, A, B, G)
     g5 = G(5);
     g6 = G(6);
 
-    % Projection for a11
-    if (a11 <= -3 && x(1)*ex(1) < 0) || (a11 >= -1 && x(1)*ex(1) > 0)
-        a11_dot = 0;
-    else
-        a11_dot = -g1 * x(1) * ex(1);
-    end
+    % Projection Conditions
+    cond1 = (a11 > -3 && a11 < -1) || ...
+            (a11 == -3 && x(1)*ex(1) >= 0) || ...
+            (a11 == -1 && x(1)*ex(1) <= 0);
 
-    % Projection for b2
-     if b2 <= 1 && u*ex(2) < 0
-        b2_dot = 0;
-    else
-        b2_dot = g6 * u * ex(2);
-    end
+    cond2 = (b2 > 1) || ...
+            (b2 == 1 && u*ex(2) >= 0);
 
-    % Rest of estimation parameters without projection
+    a11_dot = -g1 * x(1) * ex(1) * cond1;  % cond1 boolean: 1 ή 0
     a12_dot = g2 * x(2) * ex(1);
     a21_dot = g3 * x(1) * ex(2);
     a22_dot = g4 * x(2) * ex(2);
     b1_dot  = g5 * u * ex(1);
+    b2_dot  = g6 * u * ex(2) * cond2;
 
     zdot = zeros(10,1);
     zdot(1:2) = dx;          % x
