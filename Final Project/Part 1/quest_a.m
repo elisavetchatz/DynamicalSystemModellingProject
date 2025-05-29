@@ -17,16 +17,18 @@ u = @(t) sin(t) + 0.5*cos(3*t);
 x0 = [0; 0];  % Initial state
 
 %% Design Estimator
-G = [240, 40, 101, 23, 1, 3.5]; % everything fine tuned
+G = [240, 40, 110, 20, 1, 3.5]; % everything fine tuned
 Thetam = diag([10, 15]);
 
 % Quest B parameters 
-questb = false;
-Gb = [71, 28, 38, 40, 1, 0]; %b1 almost perfect, a12 almost perfect
-S = [-0.001; 0.005; -0.01; -0.05; 0; 0.1];
+questb = true;
+Gb = [150, 35, 135, 40, 1, 90]; %b1 almost perfect, a12 almost perfect
+S = [-0.001; 0.005; -0.001; -0.005; 0; -0.01];
+T = 1;
 duration = 0.5; % Duration of disturbance pulse
-amplitude = [5; -5]; % Disturbance amplitude
-omega = disturbance_pulse(tvec, Tsim, duration, amplitude); % No disturbance
+amplitude = [1; -1]; % Disturbance amplitude
+
+omega = disturbance_pulse(tvec, T, duration, amplitude); % No disturbance
 
 z0 = zeros(10, 1);
 z0(1) = x0(1);  % x1 initial condition
@@ -34,7 +36,7 @@ z0(2) = x0(2); % x2 initial condition
 z0(5) = -2;  % a11 in [-3, -1]
 z0(10) = 2; % b2 ≥ 1
 
-[t, z] = ode45(@(t, z) mtopo_proj_estimator(t, z, u, A, B, G, Thetam, S, omega, questb), tvec, z0);
+[t, z] = ode45(@(t, z) mtopo_proj_estimator(t, z, u, A, B, Gb, Thetam, S, omega, questb), tvec, z0);
 
 x1 = z(:,1);  x2 = z(:,2);
 xhat1 = z(:,3);  xhat2 = z(:,4);
@@ -45,24 +47,24 @@ b1 = z(:,9);  b2 = z(:,10);
 e1 = x1 - xhat1;
 e2 = x2 - xhat2;
 
-% plotting
-figure;
-subplot(2,1,1);
-plot(t, x1, 'b', t, xhat1, 'r--', "LineWidth", 1.2);
-legend('x1','x1_hat'); ylabel('x1'); title('State 1');
-grid on;
+% % plotting
+% figure;
+% subplot(2,1,1);
+% plot(t, x1, 'b', t, xhat1, 'r--', "LineWidth", 1.2);
+% legend('x1','x1_hat'); ylabel('x1'); title('State 1');
+% grid on;
 
-subplot(2,1,2);
-plot(t, x2, 'b', t, xhat2, 'r--', "LineWidth", 1.2);
-legend('x2','x2_hat'); ylabel('x2'); xlabel('t [s]'); title('State 2');
-grid on;
+% subplot(2,1,2);
+% plot(t, x2, 'b', t, xhat2, 'r--', "LineWidth", 1.2);
+% legend('x2','x2_hat'); ylabel('x2'); xlabel('t [s]'); title('State 2');
+% grid on;
 
-% Σφάλματα
-figure;
-plot(t, e1, t, e2, "LineWidth", 1.2);
-legend('e1','e2');
-title('State Error'); xlabel('t [s]');
-grid on;
+% % Σφάλματα
+% figure;
+% plot(t, e1, t, e2, "LineWidth", 1.2);
+% legend('e1','e2');
+% title('State Error'); xlabel('t [s]');
+% grid on;
 
 % Εκτιμήσεις A
 figure;
@@ -84,23 +86,43 @@ legend('b_{1}', 'b_{2}', 'Location', 'best');
 title('Estimation B vs Real Values');
 xlabel('t [s]'); grid on;
 
-ea11 = a11 - A(1,1);
-ea12 = a12 - A(1,2);
-ea21 = a21 - A(2,1);
-ea22 = a22 - A(2, 2);
+% ea11 = a11 - A(1,1);
+% ea12 = a12 - A(1,2);
+% ea21 = a21 - A(2,1);
+% ea22 = a22 - A(2, 2);
 
-eb1 = b1 - B(1);
-eb2 = b2 - B(2);
+% eb1 = b1 - B(1);
+% eb2 = b2 - B(2);
 
-figure;
-plot(t, ea11, 'r', t, ea12, 'g', t, ea21, 'b', t, ea22, 'm', "Linewidth", 1.2); hold on;
-legend('e_{a11}', 'e_{a12}', 'e_{a21}', 'e_{a22}', 'Location', 'best');
-title('Σφάλματα Εκτίμησης Παραμέτρων A');
-xlabel('t [s]'); ylabel('Σφάλμα'); grid on;
+% figure;
+% plot(t, ea11, 'r', t, ea12, 'g', t, ea21, 'b', t, ea22, 'm', "Linewidth", 1.2); hold on;
+% legend('e_{a11}', 'e_{a12}', 'e_{a21}', 'e_{a22}', 'Location', 'best');
+% title('Σφάλματα Εκτίμησης Παραμέτρων A');
+% xlabel('t [s]'); ylabel('Σφάλμα'); grid on;
 
-figure;
-plot(t, eb1, 'b', t, eb2, 'r', "Linewidth", 1.2); hold on;
-legend('e_{b1}', 'e_{b2}', 'Location', 'best');
-title('Σφάλματα Εκτίμησης Παραμέτρων B');
-xlabel('t [s]'); ylabel('Σφάλμα'); grid on;
+% figure;
+% plot(t, eb1, 'b', t, eb2, 'r', "Linewidth", 1.2); hold on;
+% legend('e_{b1}', 'e_{b2}', 'Location', 'best');
+% title('Σφάλματα Εκτίμησης Παραμέτρων B');
+% xlabel('t [s]'); ylabel('Σφάλμα'); grid on;
 
+% omega_vals = zeros(2, length(tvec));
+
+% for k = 1:length(tvec)
+%     omega_vals(:,k) = disturbance_pulse(tvec(k), Tsim, duration, amplitude);
+% end
+% % Πλοτ
+% figure;
+% subplot(2,1,1)
+% plot(tvec, omega_vals(1,:), 'r', 'LineWidth', 1.5);
+% title('Disturbance \omega_1(t)');
+% xlabel('t [s]');
+% ylabel('\omega_1');
+% grid on;
+
+% subplot(2,1,2)
+% plot(tvec, omega_vals(2,:), 'b', 'LineWidth', 1.5);
+% title('Disturbance \omega_2(t)');
+% xlabel('t [s]');
+% ylabel('\omega_2');
+% grid on;
