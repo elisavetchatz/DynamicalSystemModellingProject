@@ -47,24 +47,24 @@ b1 = z(:,9);  b2 = z(:,10);
 e1 = x1 - xhat1;
 e2 = x2 - xhat2;
 
-% % plotting
-% figure;
-% subplot(2,1,1);
-% plot(t, x1, 'b', t, xhat1, 'r--', "LineWidth", 1.2);
-% legend('x1','x1_hat'); ylabel('x1'); title('State 1');
-% grid on;
+% plotting
+figure;
+subplot(2,1,1);
+plot(t, x1, 'b', t, xhat1, 'r--', "LineWidth", 1.2);
+legend('x1','x1_hat'); ylabel('x1'); title('State 1');
+grid on;
 
-% subplot(2,1,2);
-% plot(t, x2, 'b', t, xhat2, 'r--', "LineWidth", 1.2);
-% legend('x2','x2_hat'); ylabel('x2'); xlabel('t [s]'); title('State 2');
-% grid on;
+subplot(2,1,2);
+plot(t, x2, 'b', t, xhat2, 'r--', "LineWidth", 1.2);
+legend('x2','x2_hat'); ylabel('x2'); xlabel('t [s]'); title('State 2');
+grid on;
 
-% % Σφάλματα
-% figure;
-% plot(t, e1, t, e2, "LineWidth", 1.2);
-% legend('e1','e2');
-% title('State Error'); xlabel('t [s]');
-% grid on;
+% Σφάλματα
+figure;
+plot(t, e1, t, e2, "LineWidth", 1.2);
+legend('e1','e2');
+title('State Error'); xlabel('t [s]');
+grid on;
 
 % Εκτιμήσεις A
 figure;
@@ -106,23 +106,23 @@ xlabel('t [s]'); grid on;
 % title('Σφάλματα Εκτίμησης Παραμέτρων B');
 % xlabel('t [s]'); ylabel('Σφάλμα'); grid on;
 
-% omega_vals = zeros(2, length(tvec));
+omega_vals = zeros(2, length(tvec));
 
-% for k = 1:length(tvec)
-%     omega_vals(:,k) = disturbance_pulse(tvec(k), Tsim, duration, amplitude);
-% end
-% % Πλοτ
-% figure;
-% subplot(2,1,1)
-% plot(tvec, omega_vals(1,:), 'r', 'LineWidth', 1.5);
-% title('Disturbance \omega_1(t)');
-% xlabel('t [s]');
-% ylabel('\omega_1');
-% grid on;
+for k = 1:length(tvec)
+    omega_vals(:,k) = disturbance_pulse(tvec(k), Tsim, duration, amplitude);
+end
+% Πλοτ
+figure;
+subplot(2,1,1)
+plot(tvec, omega_vals(1,:), 'r', 'LineWidth', 1.5);
+title('Disturbance \omega_1(t)');
+xlabel('t [s]');
+ylabel('\omega_1');
+grid on;
 
-% subplot(2,1,2)
-% plot(tvec, omega_vals(2,:), 'b', 'LineWidth', 1.5);
-% title('Disturbance \omega_2(t)');
-% xlabel('t [s]');
-% ylabel('\omega_2');
-% grid on;
+subplot(2,1,2)
+plot(tvec, omega_vals(2,:), 'b', 'LineWidth', 1.5);
+title('Disturbance \omega_2(t)');
+xlabel('t [s]');
+ylabel('\omega_2');
+grid on;
