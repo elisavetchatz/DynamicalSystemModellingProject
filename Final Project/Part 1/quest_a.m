@@ -1,8 +1,8 @@
 %% THEMA 1
 
 % Time parameters
-Tsim = 50;
-Tsampl = 0.01;
+Tsim = 20;
+Tsampl = 0.001;
 N = Tsim/Tsampl;
 tvec  = 0:Tsampl:Tsim;
 
@@ -17,15 +17,24 @@ u = @(t) sin(t) + 0.5*cos(3*t);
 x0 = [0; 0];  % Initial state
 
 %% Design Estimator
-G = [74, 28, 38, 23, 1, 4]; % a22 check, a12 almost perfect, a11 needs a little mof=dification, a21 αρκετα μακρια
+G = [240, 40, 101, 23, 1, 3.5]; % everything fine tuned
 Thetam = diag([10, 15]);
+
+% Quest B parameters 
+questb = false;
+Gb = [71, 28, 38, 40, 1, 0]; %b1 almost perfect, a12 almost perfect
+S = [-0.001; 0.005; -0.01; -0.05; 0; 0.1];
+duration = 0.5; % Duration of disturbance pulse
+amplitude = [5; -5]; % Disturbance amplitude
+omega = disturbance_pulse(tvec, Tsim, duration, amplitude); % No disturbance
+
 z0 = zeros(10, 1);
 z0(1) = x0(1);  % x1 initial condition
 z0(2) = x0(2); % x2 initial condition
 z0(5) = -2;  % a11 in [-3, -1]
 z0(10) = 2; % b2 ≥ 1
 
-[t, z] = ode45(@(t, z) mtopo_proj_estimator(t, z, u, A, B, G, Thetam), tvec, z0);
+[t, z] = ode45(@(t, z) mtopo_proj_estimator(t, z, u, A, B, G, Thetam, S, omega, questb), tvec, z0);
 
 x1 = z(:,1);  x2 = z(:,2);
 xhat1 = z(:,3);  xhat2 = z(:,4);
@@ -36,43 +45,43 @@ b1 = z(:,9);  b2 = z(:,10);
 e1 = x1 - xhat1;
 e2 = x2 - xhat2;
 
-%% plotting
+% plotting
 figure;
 subplot(2,1,1);
-plot(t, x1, 'b', t, xhat1, 'r--');
-legend('x_1','\hat{x}_1'); ylabel('x_1'); title('Κατάσταση 1');
+plot(t, x1, 'b', t, xhat1, 'r--', "LineWidth", 1.2);
+legend('x1','x1_hat'); ylabel('x1'); title('State 1');
 grid on;
 
 subplot(2,1,2);
-plot(t, x2, 'b', t, xhat2, 'r--');
-legend('x_2','\hat{x}_2'); ylabel('x_2'); xlabel('t [s]'); title('Κατάσταση 2');
+plot(t, x2, 'b', t, xhat2, 'r--', "LineWidth", 1.2);
+legend('x2','x2_hat'); ylabel('x2'); xlabel('t [s]'); title('State 2');
 grid on;
 
 % Σφάλματα
 figure;
-plot(t, e1, t, e2);
-legend('e_1','e_2');
-title('Σφάλμα Κατάστασης'); xlabel('t [s]');
+plot(t, e1, t, e2, "LineWidth", 1.2);
+legend('e1','e2');
+title('State Error'); xlabel('t [s]');
 grid on;
 
 % Εκτιμήσεις A
 figure;
-plot(t, a11, 'r', t, a12, 'g', t, a21, 'b', t, a22, 'm'); hold on;
+plot(t, a11, 'r', t, a12, 'g', t, a21, 'b', t, a22, 'm', "Linewidth", 1.2); hold on;
 yline(-2.15, '--r');
 yline(0.25, '--g');
 yline(-0.75, '--b');
 yline(-2.00, '--m');
 legend('a_{11}','a_{12}','a_{21}','a_{22}', 'Location', 'best');
-title('Εκτιμήσεις A vs Πραγματικές Τιμές');
+title('Estimation A vs Real Values');
 xlabel('t [s]'); grid on;
 
 % Εκτιμήσεις B
 figure;
-plot(t, b1, 'b', t, b2, 'r'); hold on;
+plot(t, b1, 'b', t, b2, 'r', "Linewidth", 1.2); hold on;
 yline(0, '--b', 'b_{1}^{true}');
 yline(1.5, '--r', 'b_{2}^{true}');
 legend('b_{1}', 'b_{2}', 'Location', 'best');
-title('Εκτιμήσεις B vs Πραγματικές Τιμές');
+title('Estimation B vs Real Values');
 xlabel('t [s]'); grid on;
 
 ea11 = a11 - A(1,1);
@@ -84,13 +93,13 @@ eb1 = b1 - B(1);
 eb2 = b2 - B(2);
 
 figure;
-plot(t, ea11, 'r', t, ea12, 'g', t, ea21, 'b', t, ea22, 'm');
+plot(t, ea11, 'r', t, ea12, 'g', t, ea21, 'b', t, ea22, 'm', "Linewidth", 1.2); hold on;
 legend('e_{a11}', 'e_{a12}', 'e_{a21}', 'e_{a22}', 'Location', 'best');
 title('Σφάλματα Εκτίμησης Παραμέτρων A');
 xlabel('t [s]'); ylabel('Σφάλμα'); grid on;
 
 figure;
-plot(t, eb1, 'b', t, eb2, 'r');
+plot(t, eb1, 'b', t, eb2, 'r', "Linewidth", 1.2); hold on;
 legend('e_{b1}', 'e_{b2}', 'Location', 'best');
 title('Σφάλματα Εκτίμησης Παραμέτρων B');
 xlabel('t [s]'); ylabel('Σφάλμα'); grid on;
