@@ -17,37 +17,45 @@ u = @(t) sin(t) + 0.5*cos(3*t);
 x0 = [0; 0];  % Initial state
 
 %% Design Estimator
+%Quest A parameters
 G = [240, 40, 110, 20, 1, 3.5]; % everything fine tuned
 Thetam = diag([10, 15]);
 
 % Quest B parameters 
-questb = true;
-Gb = [150, 35, 135, 40, 1, 90]; %b1 almost perfect, a12 almost perfect
-S = [-0.001; 0.005; -0.001; -0.005; 0; -0.01];
-T = 1;
-duration = 0.5; % Duration of disturbance pulse
-amplitude = [1; -1]; % Disturbance amplitude
+questb = false;
+Gb = [1, 35, 20, 18, 0.5, 50];
+S = [-0.001; 0.05; 0.01; -0.005; 0; -0.01];
 
-omega = disturbance_pulse(tvec, T, duration, amplitude); % No disturbance
+%%generate omega pulse
+T_pulse = 2;
+amplitude = 1; % Disturbance amplitude
+omega = @(t) disturbance_pulse(t, T_pulse, amplitude);
 
+%%initial conditions for the state and parameters
 z0 = zeros(10, 1);
 z0(1) = x0(1);  % x1 initial condition
 z0(2) = x0(2); % x2 initial condition
 z0(5) = -2;  % a11 in [-3, -1]
 z0(10) = 2; % b2 ≥ 1
 
-[t, z] = ode45(@(t, z) mtopo_proj_estimator(t, z, u, A, B, Gb, Thetam, S, omega, questb), tvec, z0);
+%% Run the ODE solver
+[t, z] = ode45(@(t, z) mtopo_proj_estimator(t, z, u, A, B, G, Gb, Thetam, S, omega, questb), tvec, z0);
 
-x1 = z(:,1);  x2 = z(:,2);
-xhat1 = z(:,3);  xhat2 = z(:,4);
-a11 = z(:,5); a12 = z(:,6);
-a21 = z(:,7); a22 = z(:,8);
-b1 = z(:,9);  b2 = z(:,10);
+x1 = z(:,1);  
+x2 = z(:,2);
+xhat1 = z(:,3);  
+xhat2 = z(:,4);
+a11 = z(:,5); 
+a12 = z(:,6);
+a21 = z(:,7); 
+a22 = z(:,8);
+b1 = z(:,9);  
+b2 = z(:,10);
 
 e1 = x1 - xhat1;
 e2 = x2 - xhat2;
 
-% plotting
+%% Create plots
 figure;
 subplot(2,1,1);
 plot(t, x1, 'b', t, xhat1, 'r--', "LineWidth", 1.2);
@@ -59,14 +67,14 @@ plot(t, x2, 'b', t, xhat2, 'r--', "LineWidth", 1.2);
 legend('x2','x2_hat'); ylabel('x2'); xlabel('t [s]'); title('State 2');
 grid on;
 
-% Σφάλματα
+% Error plots
 figure;
 plot(t, e1, t, e2, "LineWidth", 1.2);
 legend('e1','e2');
 title('State Error'); xlabel('t [s]');
 grid on;
 
-% Εκτιμήσεις A
+% A estimates
 figure;
 plot(t, a11, 'r', t, a12, 'g', t, a21, 'b', t, a22, 'm', "Linewidth", 1.2); hold on;
 yline(-2.15, '--r');
@@ -77,7 +85,7 @@ legend('a_{11}','a_{12}','a_{21}','a_{22}', 'Location', 'best');
 title('Estimation A vs Real Values');
 xlabel('t [s]'); grid on;
 
-% Εκτιμήσεις B
+% B estimates
 figure;
 plot(t, b1, 'b', t, b2, 'r', "Linewidth", 1.2); hold on;
 yline(0, '--b', 'b_{1}^{true}');
@@ -109,7 +117,7 @@ xlabel('t [s]'); grid on;
 omega_vals = zeros(2, length(tvec));
 
 for k = 1:length(tvec)
-    omega_vals(:,k) = disturbance_pulse(tvec(k), Tsim, duration, amplitude);
+    omega_vals(:,k) = disturbance_pulse(tvec(k), T_pulse, amplitude);
 end
 % Πλοτ
 figure;

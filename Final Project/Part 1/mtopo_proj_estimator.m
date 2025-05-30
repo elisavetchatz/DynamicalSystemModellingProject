@@ -1,7 +1,7 @@
-function zdot = mtopo_proj_estimator(t, z, u, A, B, G, Thetam, S, omega, questb)
+function zdot = mtopo_proj_estimator(t, z, u, A, B, G, Gb, Thetam, S, omega, questb)
 
     u = u(t);
-    % omega = omega(t);
+    omega = omega(t);
     
     x = z(1:2);           % [x1; x2]
     xhat = z(3:4);        % [xhat1; xhat2]
@@ -15,6 +15,7 @@ function zdot = mtopo_proj_estimator(t, z, u, A, B, G, Thetam, S, omega, questb)
     % System dynamics 
     if questb == true
         dx = A*x + B*u + omega;
+        G = Gb; 
     else
         dx = A*x + B*u;
         S = zeros(6,1); % No s modification
