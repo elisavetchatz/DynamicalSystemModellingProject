@@ -24,7 +24,7 @@ plot(t, xdot, 'k'); ylabel('dx/dt'); xlabel('Time [s]'); title('True Derivative'
 
 %% Cross-validation for Model Selection
 N = length(t);
-train_ratio = 0.7;
+train_ratio = 0.8;
 N_train = round(train_ratio * N);
 
 % train and test sets
@@ -37,7 +37,7 @@ u_val = u_vec(N_train+1:end);
 y_val = xdot(N_train+1:end);
 
 % Initialize results storage
-model_count = 5;
+model_count = 10;
 MSE_val = zeros(model_count, 1);
 
 % Loop through models
@@ -63,7 +63,9 @@ for model_id = 1:model_count
 end
 
 %% Results
-model_labels = {'Poly', 'RBF', 'Light', 'Hybrid', 'Sigmoid'};
+model_labels = {'Poly', 'RBF', 'Light', 'Hybrid', 'Sigmoid', ...
+                '2 RBFs', 'Enriched Light', 'Nonlinear', ...
+                '2nd Order Poly', '5th Order Poly'};
 
 %Table
 fprintf('\nModel Evaluation Results (Validation MSE):\n');
@@ -80,29 +82,106 @@ grid on;
 
 % Plot estimated vs true derivative for all models
 figure;
+hold on;
+plot(t, xdot, 'k', 'LineWidth', 3); % True derivative
+
+colors = lines(model_count); 
+
 for model_id = 1:model_count
-    % RLS σε όλο το dataset
     [theta_hist, ~, ~] = rls_estimator(x, u_vec, xdot, model_id);
     theta_final = theta_hist(:, end);
 
-    % Εκτίμηση με τις τελικές παραμέτρους
-    y_hat_all = zeros(N, 1);
+    y_hat_all = zeros(N,1);
     for k = 1:N
         phi = base_func(x(k), u_vec(k), model_id);
         y_hat_all(k) = theta_final' * phi;
     end
 
-    % Υποπλοκή
-    subplot(model_count,1,model_id);
-    plot(t, xdot, 'k', 'LineWidth', 1.2); hold on;
-    plot(t, y_hat_all, 'r--', 'LineWidth', 1.2);
-    ylabel(model_labels{model_id});
-    if model_id == 1
-        title('\dot{x}(t): True (black) vs Estimated (red dashed) for all models');
+    plot(t, y_hat_all, '--', 'Color', colors(model_id,:), 'LineWidth', 1.3);
+end
+
+legend_labels = [{'True \dot{x}'} model_labels];
+legend(legend_labels, 'Location', 'BestOutside');
+xlabel('Time [s]'); ylabel('\dot{x}(t)');
+title('Estimated vs True \dot{x}(t) for All Models');
+grid on;
+
+
+%
+figure;
+colors = lines(model_count);  % σταθερά χρώματα
+
+rows = 5; cols = 2;
+
+for model_id = 1:model_count
+    [theta_hist, ~, ~] = rls_estimator(x, u_vec, xdot, model_id);
+    theta_final = theta_hist(:, end);
+
+    y_hat = zeros(N,1);
+    for k = 1:N
+        phi = base_func(x(k), u_vec(k), model_id);
+        y_hat(k) = theta_final' * phi;
     end
-    if model_id == model_count
-        xlabel('Time [s]');
-    end
+
+    error = abs(xdot - y_hat);
+
+    subplot(rows, cols, model_id);
+    plot(t, error, 'Color', colors(model_id,:), 'LineWidth', 1.2);
+    title(model_labels{model_id});
+    xlabel('Time [s]');
+    ylabel('|e(t)|');
     grid on;
 end
-legend('True \dot{x}', 'Estimated', 'Location', 'SouthEast');
+
+sgtitle('Absolute Estimation Error per Model (|e(t)|)');
+
+
+
+
+
+
+lambda = 0.01;  % ρυθμίζεις τη βαρύτητα
+dt = t(2) - t(1);
+
+J_scores = zeros(model_count, 1);      % Συνολικά κόστη
+n_thetas = zeros(model_count, 1);      % Πλήθος παραμέτρων
+E_scores = zeros(model_count, 1);      % Ενεργειακό σφάλμα
+
+for model_id = 1:model_count
+    [theta_hist, ~, ~] = rls_estimator(x, u_vec, xdot, model_id);
+    theta_final = theta_hist(:, end);
+    n_theta = length(theta_final);
+
+    y_hat = zeros(N, 1);
+    for k = 1:N
+        phi = base_func(x(k), u_vec(k), model_id);
+        y_hat(k) = theta_final' * phi;
+    end
+
+    e = xdot - y_hat;
+    E = sum(e.^2) * dt;
+
+    J = E + lambda * n_theta;
+
+    % Store
+    J_scores(model_id) = J;
+    n_thetas(model_id) = n_theta;
+    E_scores(model_id) = E;
+end
+
+
+figure;
+bar(J_scores);
+set(gca, 'XTickLabel', model_labels, 'FontSize', 12);
+ylabel('J = ∫e²dt + λ·n_θ');
+title(sprintf('Total Modeling Cost (λ = %.3f)', lambda));
+grid on;
+
+
+fprintf('Model Summary (λ = %.3f):\n', lambda);
+fprintf('ID | Model     | E_total      | n_θ | J_total\n');
+fprintf('----------------------------------------------\n');
+for i = 1:model_count
+    fprintf('%2d | %-10s | %.6f | %2d  | %.6f\n', ...
+        i, model_labels{i}, E_scores(i), n_thetas(i), J_scores(i));
+end
