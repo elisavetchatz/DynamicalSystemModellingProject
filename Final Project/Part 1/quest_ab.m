@@ -1,5 +1,7 @@
 %% THEMA 1
+% Quest A and B Estimator for a 2D system
 questb = true;
+
 % Time parameters
 Tsim = 20;
 Tsampl = 0.001;
@@ -17,16 +19,16 @@ u = @(t) sin(t) + 0.5*cos(3*t);
 x0 = [0; 0];  
 
 %% Design Estimator
-%Quest A parameters
+%%Quest A parameters
 G = [240, 40, 108, 25, 1, 3.5]; % everything fine tuned
 Thetam = diag([10, 15]);
 
-% Quest B parameters 
+%%Quest B parameters 
 Gb = [1, 35, 20, 18, 0.5, 50];
 S = [-0.001; 0.05; 0.01; -0.005; 0; -0.01];
-%%generate omega pulse
+%generate omega pulse
 T_pulse = 2;
-amplitude = 0.01; % Disturbance amplitude
+amplitude = 1; 
 omega = @(t) disturbance_pulse(t, T_pulse, amplitude);
 
 %%initial conditions for the state and parameters
@@ -62,12 +64,13 @@ eb1 = b1 - B(1);
 eb2 = b2 - B(2);
 
 %% Create plots
+
+% State plots
 figure;
 subplot(2,1,1);
 plot(t, x1, 'b', t, xhat1, 'r--', "LineWidth", 1.2);
 legend('x_1','{x_1}^{hat}'); ylabel('x_1'); title('State 1');
 grid on;
-
 subplot(2,1,2);
 plot(t, x2, 'b', t, xhat2, 'r--', "LineWidth", 1.2);
 legend('x_2','{x_2}^{hat}'); ylabel('x_2'); xlabel('t [s]'); title('State 2');
@@ -100,12 +103,12 @@ legend('b_{1}', 'b_{2}', 'Location', 'best');
 title('Estimation B vs Real Values');
 xlabel('t [s]'); grid on;
 
+% Estimation errors
 figure;
 plot(t, ea11, 'r', t, ea12, 'g', t, ea21, 'b', t, ea22, 'm', "Linewidth", 1.2); hold on;
 legend('e_{a11}', 'e_{a12}', 'e_{a21}', 'e_{a22}', 'Location', 'best');
 title('Estimation Errors: parameter A');
 xlabel('t [s]'); ylabel('Σφάλμα'); grid on;
-
 figure;
 plot(t, eb1, 'b', t, eb2, 'r', "Linewidth", 1.2); hold on;
 legend('e_{b1}', 'e_{b2}', 'Location', 'best');
@@ -113,22 +116,24 @@ title('Estimation Errors: parameter B');
 xlabel('t [s]'); ylabel('Σφάλμα'); grid on;
 
 % Plot disturbance pulse
-omega_vals = zeros(2, length(tvec));
+if questb
+    omega_vals = zeros(2, length(tvec));
 
-for k = 1:length(tvec)
-    omega_vals(:,k) = disturbance_pulse(tvec(k), T_pulse, amplitude);
+    for k = 1:length(tvec)
+        omega_vals(:,k) = disturbance_pulse(tvec(k), T_pulse, amplitude);
+    end
+    figure;
+    subplot(2,1,1)
+    plot(tvec, omega_vals(1,:), 'r', 'LineWidth', 1.5);
+    title('Disturbance \omega_1(t)');
+    xlabel('t [s]');
+    ylabel('\omega_1');
+    grid on;
+
+    subplot(2,1,2)
+    plot(tvec, omega_vals(2,:), 'b', 'LineWidth', 1.5);
+    title('Disturbance \omega_2(t)');
+    xlabel('t [s]');
+    ylabel('\omega_2');
+    grid on;
 end
-figure;
-subplot(2,1,1)
-plot(tvec, omega_vals(1,:), 'r', 'LineWidth', 1.5);
-title('Disturbance \omega_1(t)');
-xlabel('t [s]');
-ylabel('\omega_1');
-grid on;
-
-subplot(2,1,2)
-plot(tvec, omega_vals(2,:), 'b', 'LineWidth', 1.5);
-title('Disturbance \omega_2(t)');
-xlabel('t [s]');
-ylabel('\omega_2');
-grid on;
