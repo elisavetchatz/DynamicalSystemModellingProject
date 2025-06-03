@@ -24,12 +24,15 @@ G = [240, 40, 108, 25, 1, 3.5]; % everything fine tuned
 Thetam = diag([10, 15]);
 
 %%Quest B parameters 
-Gb = [1, 35, 20, 18, 0.5, 50];
+Gb = [1.5, 2, 5, 20, 0.5, 7];
+Thetamb = diag([40, 25]);
 S = [-0.001; 0.05; 0.01; -0.005; 0; -0.01];
 %generate omega pulse
 T_pulse = 2;
-amplitude = 1; 
+amplitude = 0.1; 
 omega = @(t) disturbance_pulse(t, T_pulse, amplitude);
+%% Deadzone
+deadzone = [0.01; 0.01]; % deadzone for x1 and x2
 
 %%initial conditions for the state and parameters
 z0 = zeros(10, 1);
@@ -39,7 +42,7 @@ z0(5) = -2;         % a11 in [-3, -1]
 z0(10) = 2;         % b2 ≥ 1
 
 %% Run the ODE solver
-[t, z] = ode45(@(t, z) mtopo_proj_estimator(t, z, u, A, B, G, Gb, Thetam, S, omega, questb), tvec, z0);
+[t, z] = ode45(@(t, z) mtopo_proj_estimator(t, z, u, A, B, G, Gb, Thetam, Thetamb, S, omega, questb), tvec, z0);
 
 x1 = z(:,1);  
 x2 = z(:,2);

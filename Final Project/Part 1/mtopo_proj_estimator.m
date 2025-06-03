@@ -1,4 +1,4 @@
-function zdot = mtopo_proj_estimator(t, z, u, A, B, G, Gb, Thetam, S, omega, questb)
+function zdot = mtopo_proj_estimator(t, z, u, A, B, G, Gb, Thetam, Thetamb, S, omega, questb)
 
     u = u(t);
     omega = omega(t);
@@ -16,6 +16,7 @@ function zdot = mtopo_proj_estimator(t, z, u, A, B, G, Gb, Thetam, S, omega, que
     if questb == true
         dx = A*x + B*u + omega;
         G = Gb; 
+        Thetam = Thetamb;
     else
         dx = A*x + B*u;
         S = zeros(6,1); % No s modification
@@ -28,17 +29,6 @@ function zdot = mtopo_proj_estimator(t, z, u, A, B, G, Gb, Thetam, S, omega, que
 
     % Error dynamics
     ex = x - xhat;
-
-    % % Deadzone logic
-    % dz = deadzone;  % assumed to be scalar or [dz1; dz2]
-    % ex_dz = zeros(size(ex));
-    % for i = 1:length(ex)
-    %     if abs(ex(i)) > dz(i)
-    %         ex_dz(i) = ex(i) - sign(ex(i)) * dz(i);
-    %     else
-    %         ex_dz(i) = 0;
-    %     end
-    % end
 
     %G gains
     g1 = G(1);
@@ -81,8 +71,3 @@ function zdot = mtopo_proj_estimator(t, z, u, A, B, G, Gb, Thetam, S, omega, que
     zdot(9) = b1_dot;
     zdot(10) = b2_dot;
 end
-    
-
-
-
-
