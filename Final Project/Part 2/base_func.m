@@ -1,45 +1,61 @@
-function phi = base_func(x, u, model_id)
-
+function phi = base_func(phi_vec, model_id)
+    
+    x1 = phi_vec(1); % assuming the first element is x
     switch model_id
 
-        case 1 % Polynomial
-            phi = [x; x^2; x^3; u];
+        case 1 % 2nd order polynomial
+            phi = [phi_vec; phi_vec.^2];  
+        
+        case 2 % 3rd order polynomial
+            phi = [phi_vec; phi_vec.^2; phi_vec.^3];
+        
+        case 3 % 4th order polynomial
+            phi = [phi_vec; phi_vec.^2; phi_vec.^3; phi_vec.^4];
 
-        case 2 % Gaussian RBF
+        case 4 % 5th order polynomial
+            phi = [phi_vec; phi_vec.^2; phi_vec.^3; phi_vec.^4; phi_vec.^5];
+
+        case 5 % Gaussian RBFs (centered at -2, 0, 2)
             sigma = 1;
             c = [-2, 0, 2];
             gaussians = exp(-(x - c).^2 / (2*sigma^2));
-            phi = [gaussians'; u];
-
-        case 3 % Lightweight
-            phi = [x; tanh(x); u];
-
-        case 4 % Hybrid: Polynomial + tanh
-            phi = [x; x^2; tanh(x); u];
-
-        case 5  % Sigmoid-based
-            phi = [1 / (1 + exp(-x)); x / (1 + x^2); u];
+            phi = [gaussians'; phi_vec];
         
-        case 6 % Two Gaussian RBFs
-            sigma = 1;
-            c = [-1, 1]; 
+        case 6 % Gaussian RBFs (centered at -1, 0, 1)
+            sigma = 0.5;
+            c = [-1, 0, 1]; 
             gaussians = exp(-(x - c).^2 / (2*sigma^2));
-            phi = [gaussians'; u];
+            phi = [gaussians'; phi_vec];
 
-        case 7 %Enriched Light Model
-            phi = [x; tanh(x); 1/(1+x^2); u];
-        
-        case 8 %Pure Nonlinear
-            phi = [tanh(x); 1/(1+x^2); sin(x); u];
-        
-        case 9 %2nd Order Polynomial
-            phi = [x; x^2; u];  
+        case 7 % Nonlinear Light Model (tanh + polynomial)
+            phi = [phi_vec; tanh(x1)];
 
-        case 10
-            phi = [x; x^2; x^3; x^4; x^5; u];  
-             
+        case 8 % % Nonlinear Light Model (tanh + polynomial 2nd order)
+            phi = [phi_vec; phi_vec.^2; tanh(x1)];
+        
+        case 9 % Nonlinear Light Model (tanh + polynomial 3rd order)
+            phi = [phi_vec; phi_vec.^2; phi_vec.^3; tanh(x1)];
+
+        case 10 % Enriched Nonlinear Model (tanh + rational + polynomial)
+            phi = [phi_vec; tanh(x1); 1 / (1 + x1^2)];
+
+        case 11 % Enriched Nonlinear Model (tanh + rational + polynomial 2nd order)
+            phi = [phi_vec; phi_vec.^2; tanh(x1); 1/(1 + x1^2)];
+
+        case 12 % Enriched Nonlinear Model (tanh + rational + polynomial 3rd order)
+            phi = [phi_vec; phi_vec.^2; phi_vec.^3; tanh(x1); 1/(1 + x1^2)];
+
+        case 13 % Nonlinear Combo (tanh, rational)
+            phi = [tanh(x1); 1/(1 + x1^2); phi_vec];
+
+        case 14 % sinusoidal model
+            phi = [sin(x1); cos(x1); phi_vec];
+
+        case 15 % exponential model
+            phi = [exp(x1); exp(-x1); phi_vec];
+
         otherwise
             error('Invalid model_id');
-    end
 
-end 
+    end
+end

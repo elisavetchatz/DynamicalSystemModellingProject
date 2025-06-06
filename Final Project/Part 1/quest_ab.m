@@ -30,7 +30,8 @@ S = [-0.001; 0.05; 0.01; -0.005; 0; -0.01];
 %generate omega pulse
 T_pulse = 2;
 amplitude = 0.1; 
-omega = @(t) disturbance_pulse(t, T_pulse, amplitude);
+% omega = @(t) disturbance_pulse(t, T_pulse, amplitude);
+omega = @(t) sin(0.*t);
 %% Deadzone
 deadzone = [0.01; 0.01]; % deadzone for x1 and x2
 
