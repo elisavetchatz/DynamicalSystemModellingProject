@@ -45,7 +45,6 @@ n_thetas     = zeros(model_count, 1);
 
 N = length(t);  % συνολικός αριθμός δειγμάτων
 
-
 % loop through each model
 for model_id = 1:model_count
     fprintf('Evaluating model %d...\n', model_id);
@@ -57,17 +56,16 @@ for model_id = 1:model_count
     theta_lengths = zeros(K, 1);
     indices = kfold_indices(N, K, 1);   % Χώρισε το dataset σε K folds
 
-
     for k = 1:K
         % Shuffle and split
         idx = randperm(N);
         split = round(0.8 * N);
-        val_idx = (indices == k);
-        train_idx = ~val_idx;
+        train_idx = idx(1:split);
+        val_idx   = idx(split+1:end);
 
         % Create phi vectors for training and validation sets
         [Phi_train, Y_train] = build_phi_vector(x(train_idx), u_vec(train_idx), nx, nu, model_id);
-        [Phi_val, Y_val]     = build_phi_vector(x(val_idx), u_vec(val_idx), nx, nu, model_id);
+        [Phi_val, Y_val] = build_phi_vector(x(val_idx), u_vec(val_idx), nx, nu, model_id);
 
         % least-squares
         [theta_hist, ~] = rls_estimator(Phi_train, Y_train);
