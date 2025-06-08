@@ -1,23 +1,26 @@
-function [Phi, Y] = build_phi_vector(x, u_vec, xdot, nx, nu, model_id)
-    % Initialize the output matrices
-    N = length(x);
-    M = N - max(nx, nu); % number of samples for regression
-    Phi = []; % +1 for the constant term
-    Y = zeros(M, 1);
+function [Phi, Y] = build_phi_vector(x, u_vec, nx, nu, model_id)
+    % Δημιουργεί τον πίνακα Phi και το διάνυσμα στόχων Y
+    % για μοντέλο τύπου x(t + d) = f(x(t), ..., u(t), ...)
     
-    % Loop through each time step to build the phi vector
+    N = length(x);
+    d = max(nx, nu);     % καθυστέρηση πρόβλεψης
+    M = N - d;           % αριθμός διαθέσιμων στιγμών
+    Phi = [];
+    Y = zeros(M, 1);
+
     for i = 1:M
-        % Extract the state and control inputs for the current time step
-        x_reg = x(i + (nx-1):-1:i);
-        u_reg = u_vec(i + (nu-1):-1:i);
-        
-        % Build the phi vector
+        % Λήψη καθυστερημένων τιμών για x και u
+        x_reg = x(i + (nx - 1):-1:i);
+        u_reg = u_vec(i + (nu - 1):-1:i);
+
+        % Δημιουργία διανύσματος παλινδρόμησης
         phi_vec = [x_reg(:); u_reg(:)];
-        
-        % Generate features based on the model_id
+
+        % Εφαρμογή βάσεων
         phi_features = base_func(phi_vec, model_id);
-        
+
+        % Αποθήκευση
         Phi = [Phi; phi_features'];
-        Y(i) = xdot(i + (nx-1));
+        Y(i) = x(i + d);   % επόμενη τιμή εξόδου (στόχος)
     end
 end

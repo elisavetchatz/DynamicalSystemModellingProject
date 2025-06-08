@@ -45,6 +45,7 @@ n_thetas     = zeros(model_count, 1);
 
 N = length(t);  % συνολικός αριθμός δειγμάτων
 
+
 % loop through each model
 for model_id = 1:model_count
     fprintf('Evaluating model %d...\n', model_id);
@@ -54,24 +55,26 @@ for model_id = 1:model_count
     aic_vals = zeros(K, 1);
     bic_vals = zeros(K, 1);
     theta_lengths = zeros(K, 1);
+    indices = kfold_indices(N, K, 1);   % Χώρισε το dataset σε K folds
+
 
     for k = 1:K
         % Shuffle and split
         idx = randperm(N);
         split = round(0.8 * N);
-        train_idx = idx(1:split);
-        val_idx   = idx(split+1:end);
+        val_idx = (indices == k);
+        train_idx = ~val_idx;
 
         % Create phi vectors for training and validation sets
-        [Phi_train, Y_train] = build_phi_vector(x(train_idx), u_vec(train_idx), xdot(train_idx), nx, nu, model_id);
-        [Phi_val, Y_val]     = build_phi_vector(x(val_idx),   u_vec(val_idx),   xdot(val_idx),   nx, nu, model_id);
+        [Phi_train, Y_train] = build_phi_vector(x(train_idx), u_vec(train_idx), nx, nu, model_id);
+        [Phi_val, Y_val]     = build_phi_vector(x(val_idx), u_vec(val_idx), nx, nu, model_id);
 
         % least-squares
-        theta_hat = Phi_train \ Y_train;
-        theta_lengths(k) = length(theta_hat);
+        [theta_hist, ~] = rls_estimator(Phi_train, Y_train);
+        theta_hat = theta_hist(:, end);   % τελικό theta
+        theta_lengths(k) = length(theta_hat);  
 
-        % Prediction
-        Y_val_hat = Phi_val * theta_hat;
+        Y_val_hat = Phi_val * theta_hat;  % πρόβλεψη στο validation 
 
         %
         e = Y_val - Y_val_hat;
@@ -148,10 +151,8 @@ grid on;
 % Normalization of metrics
 metrics = [MSE_val_mean'; MSE_val_std'; J_scores'; AIC_scores'; BIC_scores'];
 metrics_norm = (metrics - min(metrics, [], 2)) ./ (max(metrics, [], 2) - min(metrics, [], 2));
-
 % Inversion of AIC and BIC for better visualization
 metrics_norm(4:5, :) = 1 - metrics_norm(4:5, :);
-
 % Heatmap of normalized metrics
 figure;
 imagesc(metrics_norm);
