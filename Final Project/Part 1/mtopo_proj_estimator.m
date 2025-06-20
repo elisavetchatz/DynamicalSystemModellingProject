@@ -54,7 +54,7 @@ function zdot = mtopo_proj_estimator(t, z, u, A, B, G, Gb, Thetam, Thetamb, S, o
     cond2 = (b2 > 1) || ...
             (b2 == 1 && u*ex(2) >= 0);
 
-    a11_dot = -g1 * x(1) * ex(1) * cond1 - s1 * a11;  % cond1 boolean: 1 ή 0
+    a11_dot = -g1 * x(1) * ex(1) * cond1 + s1 * a11;  % cond1 boolean: 1 ή 0
     a12_dot = g2 * x(2) * ex(1) - s2 * a12;  
     a21_dot = g3 * x(1) * ex(2) - s3 * a21;
     a22_dot = g4 * x(2) * ex(2) - s4 * a22;

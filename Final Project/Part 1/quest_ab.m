@@ -13,7 +13,7 @@ A = [-2.15 0.25; -0.75 -2];
 B = [0; 1.5];
 
 % Chosen Input 
-u = @(t) sin(t) + 0.5*cos(3*t);
+u = @(t) sin(t) + 0.5*cos(3*t) + 0.1*sin(5*t); % input function
 
 % Initial conditions
 x0 = [0; 0];  
@@ -24,14 +24,15 @@ G = [240, 40, 108, 25, 1, 3.5]; % everything fine tuned
 Thetam = diag([10, 15]);
 
 %%Quest B parameters 
-Gb = [1.5, 2, 5, 20, 0.5, 7];
+%Gb = [0.1, 0.3, 5, 20, 0.5, 7];
+Gb = [40, 30, 85, 25, 0.5, 7];
 Thetamb = diag([40, 25]);
-S = [-0.001; 0.05; 0.01; -0.005; 0; -0.01];
+S = [0.001; 0.05; 0.01; 0.005; 0; -0.01];
 %generate omega pulse
 T_pulse = 2;
 amplitude = 0.1; 
-% omega = @(t) disturbance_pulse(t, T_pulse, amplitude);
-omega = @(t) sin(0.*t);
+omega = @(t) disturbance_pulse(t, T_pulse, amplitude);
+%omega = @(t) sin(t);
 %% Deadzone
 deadzone = [0.01; 0.01]; % deadzone for x1 and x2
 
@@ -141,3 +142,61 @@ if questb
     ylabel('\omega_2');
     grid on;
 end
+
+%% how does disturbance affect estimation errors
+amplitudes = linspace(0, 1, 10); 
+state_errors = zeros(size(amplitudes));
+param_errors = zeros(size(amplitudes));
+
+for i = 1:length(amplitudes)
+    amplitude = amplitudes(i);
+    omega = @(t) disturbance_pulse(t, T_pulse, amplitude); 
+
+    z0 = zeros(10, 1);
+    z0(1) = x0(1); 
+    z0(2) = x0(2);
+    z0(5) = -2;    
+    z0(10) = 2;
+
+    [t, z] = ode45(@(t, z) mtopo_proj_estimator(t, z, u, A, B, G, Gb, Thetam, Thetamb, S, omega, questb), tvec, z0);
+
+    x1 = z(:,1); 
+    x2 = z(:,2);
+    xhat1 = z(:,3); 
+    xhat2 = z(:,4);
+
+    % Absolute error in state estimation
+    e1 = abs(x1 - xhat1);
+    e2 = abs(x2 - xhat2);
+    mae_state = mean(e1 + e2);  % Mean Absolute Error (MAE)
+    state_errors(i) = mae_state;
+
+    % Absolute error in parameter estimation
+    a11 = z(:,5);  
+    a12 = z(:,6);
+    a21 = z(:,7);  
+    a22 = z(:,8);
+    b1  = z(:,9);  
+    b2  = z(:,10);
+
+    ea11 = abs(a11 - A(1,1)); 
+    ea12 = abs(a12 - A(1,2));
+    ea21 = abs(a21 - A(2,1));
+    ea22 = abs(a22 - A(2,2));
+    eb1  = abs(b1  - B(1));   
+    eb2  = abs(b2  - B(2));
+
+    mae_param = mean(ea11 + ea12 + ea21 + ea22 + eb1 + eb2);
+    param_errors(i) = mae_param;
+end
+
+% Plotting the effect of disturbance amplitude on estimation errors
+figure;
+plot(amplitudes, state_errors, '-o', 'LineWidth', 1.5);
+hold on;
+plot(amplitudes, param_errors, '-s', 'LineWidth', 1.5);
+xlabel('Omega Amplitude');
+ylabel('Mean Absolute Error');
+title('Effect of Disturbance Amplitude on Estimation Errors');
+legend({'States', 'Parameters'}, 'Location', 'northwest');
+grid on;
