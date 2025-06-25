@@ -13,7 +13,7 @@ A = [-2.15 0.25; -0.75 -2];
 B = [0; 1.5];
 
 % Chosen Input 
-u = @(t) sin(t) + 0.5*cos(3*t) + 0.1*sin(5*t); % input function
+u = @(t) sin(t) + 0.5*cos(3*t); % input function
 
 % Initial conditions
 x0 = [0; 0];  
@@ -25,7 +25,7 @@ Thetam = diag([10, 15]);
 
 %%Quest B parameters 
 %Gb = [0.1, 0.3, 5, 20, 0.5, 7];
-Gb = [40, 30, 85, 25, 0.5, 7];
+Gb = [40, 30, 85, 32, 0.5, 12.5];
 Thetamb = diag([40, 25]);
 S = [0.001; 0.05; 0.01; 0.005; 0; -0.01];
 %generate omega pulse
@@ -199,4 +199,79 @@ xlabel('Omega Amplitude');
 ylabel('Mean Absolute Error');
 title('Effect of Disturbance Amplitude on Estimation Errors');
 legend({'States', 'Parameters'}, 'Location', 'northwest');
+grid on;
+
+%% 
+amplitudes = linspace(0, 1, 10); 
+n = length(amplitudes);
+
+% Initialize error storage
+e_x1 = zeros(1, n);
+e_x2 = zeros(1, n);
+e_a11 = zeros(1, n);
+e_a12 = zeros(1, n);
+e_a21 = zeros(1, n);
+e_a22 = zeros(1, n);
+e_b1  = zeros(1, n);
+e_b2  = zeros(1, n);
+
+for i = 1:n
+    amplitude = amplitudes(i);
+    omega = @(t) disturbance_pulse(t, T_pulse, amplitude); 
+
+    % Initial conditions
+    z0 = zeros(10, 1);
+    z0(1) = x0(1); 
+    z0(2) = x0(2);
+    z0(5) = -2;    
+    z0(10) = 2;
+
+    % Run simulation
+    [t, z] = ode45(@(t, z) mtopo_proj_estimator(t, z, u, A, B, G, Gb, Thetam, Thetamb, S, omega, questb), tvec, z0);
+
+    % Extract true and estimated states
+    x1 = z(:,1); x2 = z(:,2);
+    xhat1 = z(:,3); xhat2 = z(:,4);
+    e_x1(i) = mean(abs(x1 - xhat1));
+    e_x2(i) = mean(abs(x2 - xhat2));
+
+    % Extract estimated parameters
+    a11 = z(:,5); a12 = z(:,6);
+    a21 = z(:,7); a22 = z(:,8);
+    b1  = z(:,9); b2  = z(:,10);
+
+    % Compute mean absolute errors
+    e_a11(i) = mean(abs(a11 - A(1,1)));
+    e_a12(i) = mean(abs(a12 - A(1,2)));
+    e_a21(i) = mean(abs(a21 - A(2,1)));
+    e_a22(i) = mean(abs(a22 - A(2,2)));
+    e_b1(i)  = mean(abs(b1 - B(1)));
+    e_b2(i)  = mean(abs(b2 - B(2)));
+end
+
+% Plotting
+figure;
+
+% state estimation errors ---
+subplot(2,1,1);
+plot(amplitudes, e_x1, '-o', 'DisplayName', 'x_1 error', 'LineWidth', 1.2); hold on;
+plot(amplitudes, e_x2, '-o', 'DisplayName', 'x_2 error', 'LineWidth', 1.2);
+title('Estimation Error of States vs Disturbance Amplitude');
+xlabel('Omega Amplitude');
+ylabel('Mean Absolute Error');
+legend('Location', 'northwest');
+grid on;
+
+% parameter estimation errors ---
+subplot(2,1,2);
+plot(amplitudes, e_a11, '-sr', 'DisplayName', 'a_{11}', 'LineWidth', 1.2); hold on;
+plot(amplitudes, e_a12, '-sg', 'DisplayName', 'a_{12}', 'LineWidth', 1.2);
+plot(amplitudes, e_a21, '-sb', 'DisplayName', 'a_{21}', 'LineWidth', 1.2);
+plot(amplitudes, e_a22, '-sm', 'DisplayName', 'a_{22}', 'LineWidth', 1.2);
+plot(amplitudes, e_b1,  '-sb', 'DisplayName', 'b_1',  'LineWidth', 1.2);
+plot(amplitudes, e_b2,  '-sr', 'DisplayName', 'b_2',  'LineWidth', 1.2);
+title('Estimation Error of Parameters vs Disturbance Amplitude');
+xlabel('Omega Amplitude');
+ylabel('Mean Absolute Error');
+legend('Location', 'northwest');
 grid on;
