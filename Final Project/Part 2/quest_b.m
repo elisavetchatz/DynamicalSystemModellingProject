@@ -58,8 +58,11 @@ for i = 1:length(input_signals)
     fprintf('MSE: %.6f\n', mse);
     fprintf('RMSE: %.6f\n', rmse);
 
-    % --- Plot true vs estimated derivative ---
+% --- Unified Plot: True vs Estimated Derivative + Error ---
     figure;
+    
+    % Subplot 1: Derivative estimation
+    subplot(2, 1, 1);
     plot(t_valid, xdot_true_valid, 'b', 'LineWidth', 1.5); hold on;
     plot(t_valid, xdot_est, 'r--', 'LineWidth', 1.5);
     xlabel('Time [s]'); ylabel('\dot{x}(t)');
@@ -67,8 +70,8 @@ for i = 1:length(input_signals)
     title(['Estimated Derivative - ', input_labels{i}]);
     grid on;
 
-    % --- Plot estimation error ---
-    figure;
+    % Subplot 2: Error plot
+    subplot(2, 1, 2);
     plot(t_valid, error, 'k', 'LineWidth', 1.2);
     xlabel('Time [s]'); ylabel('Estimation Error');
     title(['Estimation Error - ', input_labels{i}]);
