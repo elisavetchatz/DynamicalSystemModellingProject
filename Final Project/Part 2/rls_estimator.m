@@ -1,5 +1,5 @@
 function [theta_hist, y_hat, error] = rls_estimator(Phi, Y)
-    % RLS εκτίμηση από έτοιμο Phi matrix και στόχο Y
+    % Recursive Least Squares Estimator
     M = size(Phi, 1);
     n = size(Phi, 2);
 

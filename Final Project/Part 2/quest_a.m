@@ -34,7 +34,7 @@ nx = 2; nu = 1;     % regression order
 K = 5;              % folds
 lambda = 0.01;      % regularization
 dt = Tsampl;  
-model_count = 15;
+model_count = 8;
 
 MSE_val_mean = zeros(model_count, 1);
 MSE_val_std  = zeros(model_count, 1);
@@ -43,7 +43,7 @@ AIC_scores   = zeros(model_count, 1);
 BIC_scores   = zeros(model_count, 1);
 n_thetas     = zeros(model_count, 1);
 
-N = length(t);  % συνολικός αριθμός δειγμάτων
+N = length(t);  % number of samples
 
 % loop through each model
 for model_id = 1:model_count
@@ -54,7 +54,7 @@ for model_id = 1:model_count
     aic_vals = zeros(K, 1);
     bic_vals = zeros(K, 1);
     theta_lengths = zeros(K, 1);
-    indices = kfold_indices(N, K, 1);   % Χώρισε το dataset σε K folds
+    indices = kfold_indices(N, K, 1);   % Split the dataset into K folds
 
     for k = 1:K
         % Shuffle and split
@@ -69,12 +69,12 @@ for model_id = 1:model_count
 
         % least-squares
         [theta_hist, ~] = rls_estimator(Phi_train, Y_train);
-        theta_hat = theta_hist(:, end);   % τελικό theta
+        theta_hat = theta_hist(:, end);   % final estimate
         theta_lengths(k) = length(theta_hat);  
 
-        Y_val_hat = Phi_val * theta_hat;  % πρόβλεψη στο validation 
+        Y_val_hat = Phi_val * theta_hat;  % prediction on validation set
 
-        %
+        % Mean Squared Error
         e = Y_val - Y_val_hat;
         mse_vals(k) = mean(e.^2);
 
@@ -88,7 +88,7 @@ for model_id = 1:model_count
         bic_vals(k) = N_val * log(mse_vals(k)) + log(N_val) * length(theta_hat);
     end
 
-    % 
+    % Aggregate results for the model
     MSE_val_mean(model_id) = mean(mse_vals);
     MSE_val_std(model_id)  = std(mse_vals);
     J_scores(model_id)     = mean(J_vals);
@@ -98,16 +98,10 @@ for model_id = 1:model_count
 end
 
 
-model_labels = {'2nd Order Poly', '3rd Order Poly', '4th Order Poly', ...
-                '5th Order Poly', 'GRBFs (-2, 0, 2)', ...
-                'GRBFs (-1, 0, 1)', 'NL(tanh + poly)', ...
-                'NL(tanh + poly 2nd order)', ...
-                'NL(tanh + poly 3rd order)', ...
-                'NE(tanh + rational + poly)', ...
-                'NE(tanh + rational + poly 2nd order)', ...
-                'NE(tanh + rational + poly 3rd order)', ...
-                'NC(tanh, rational)', 'Sinusoidal Model', ...
-                'Exponential Model'};
+model_labels = {'1', '2', '3', ...
+                '4', '5', ...
+                '6', '7', ...
+                '8'};
 
 %% Display results
 results_table = table((1:model_count)', model_labels', ...
@@ -123,7 +117,7 @@ variance = MSE_val_std.^2;
 cmap = turbo(length(model_labels)); 
 figure;
 hold on;
-% Σχεδίαση σημείων και προσθήκη σε legend
+% Plot each model's bias and variance
 for i = 1:length(model_labels)
     scatter(bias_sq(i), variance(i), 80, cmap(i, :), 'filled');
 end
@@ -166,3 +160,62 @@ xlabel('Model');
 ylabel('Metric');
 title('Model Performance Heatmap (Normalized Metrics)', 'FontWeight', 'bold');
 set(gca, 'FontSize', 12);
+
+%% Εκτίμηση με τελικό μοντέλο στην αρχική είσοδο (u(t) = sin(t))
+
+% --- Παράμετροι ---
+model_id = 8;  % Τελικό μοντέλο, π.χ. Exponential
+nx = 2; nu = 1;
+dt = Tsampl;
+
+% --- Είσοδος και προσομοίωση ---
+u = @(t) sin(t);
+[t, x] = ode45(@(t, x) true_func(t, x, u), tspan, x0);
+u_vec = u(t);
+
+% --- Πραγματική παράγωγος ---
+xdot_true = -x.^3 + tanh(x) + 1 ./ (1 + x.^2) + u_vec;
+
+% --- Χτίσιμο Phi και εκτίμηση ---
+[Phi, ~] = build_phi_vector(x, u_vec, nx, nu, model_id);
+[theta_hist, ~, ~] = rls_estimator(Phi, xdot_true(max(nx, nu)+1:end));
+theta_hat = theta_hist(:, end);
+xdot_est = Phi * theta_hat;
+
+% --- Εγκυρες τιμές για σύγκριση ---
+valid_idx = (max(nx, nu)+1):length(t);  % λόγω του regression order
+xdot_true_valid = xdot_true(valid_idx);
+time_valid = t(valid_idx);
+
+% --- Υπολογισμός σφάλματος ---
+error = xdot_true_valid - xdot_est;
+mse = mean(error.^2);
+rmse = sqrt(mse);
+
+fprintf('MSE στην αρχική είσοδο: %.6f\n', mse);
+fprintf('RMSE στην αρχική είσοδο: %.6f\n', rmse);
+
+% --- Διάγραμμα Εκτίμησης vs Πραγματικής τιμής ---
+figure;
+plot(time_valid, xdot_true_valid, 'b', 'LineWidth', 1.5); hold on;
+plot(time_valid, xdot_est, 'r--', 'LineWidth', 1.5);
+xlabel('Χρόνος [s]'); ylabel('\dot{x}(t)');
+legend('Πραγματική', 'Εκτίμηση');
+title('Εκτίμηση παραγώγου στην αρχική είσοδο (sin)');
+grid on;
+
+% --- Διάγραμμα Σφάλματος ---
+figure;
+plot(time_valid, error, 'k', 'LineWidth', 1.2);
+xlabel('Χρόνος [s]'); ylabel('Σφάλμα');
+title('Σφάλμα Εκτίμησης στην αρχική είσοδο');
+grid on;
+
+% --- Διάγραμμα Κατάστασης vs Εκτίμησης ---
+figure;
+scatter(x(valid_idx), xdot_est, 10, 'filled'); hold on;
+scatter(x(valid_idx), xdot_true_valid, 10);
+xlabel('x(t)'); ylabel('\dot{x}(t)');
+legend('Εκτίμηση', 'Πραγματική');
+title('x vs \dot{x}: Εκτίμηση και Πραγματικότητα');
+grid on;
