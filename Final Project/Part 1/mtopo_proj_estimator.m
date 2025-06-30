@@ -63,7 +63,7 @@ function zdot = mtopo_proj_estimator(t, z, u, A, B, G, Gb, Thetam, Thetamb, S, o
 
     zdot = zeros(10,1);
     zdot(1:2) = dx;          % x
-    zdot(3:4) = dxhat;       % x hat
+    zdot(3:4) = dxhat;       % xhat
     zdot(5) = a11_dot;
     zdot(6) = a12_dot;
     zdot(7) = a21_dot;

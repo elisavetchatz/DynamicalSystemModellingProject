@@ -1,3 +1,6 @@
+%% Thema 2
+% Quest A: Nonlinear System Identification using Basis Functions
+
 close all;
 
 Tsim = 20;
@@ -30,9 +33,9 @@ grid on;
 
 %% Build Phi vector and evaluate models
 % Parameters
-nx = 2; nu = 1;     % regression order
-K = 5;              % folds
-lambda = 0.01;      % regularization
+nx = 2; nu = 1;     
+K = 5;              
+lambda = 0.01; % regularization
 dt = Tsampl;  
 model_count = 8;
 

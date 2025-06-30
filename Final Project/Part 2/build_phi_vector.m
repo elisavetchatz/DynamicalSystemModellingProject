@@ -1,5 +1,4 @@
 function [Phi, Y] = build_phi_vector(x, u_vec, nx, nu, model_id)
-    % constructs the regression matrix Phi and target vector Y
     % x: state vector (N x 1)
     % u_vec: input vector (N x 1)
     % nx: number of state variables
@@ -7,7 +6,7 @@ function [Phi, Y] = build_phi_vector(x, u_vec, nx, nu, model_id)
     % model_id: selects the basis structure
     
     N = length(x);
-    d = max(nx, nu);  % delay based on the maximum of state and input dimensions    
+    d = max(nx, nu);    
     M = N - d;        % number of regression samples  
     Phi = [];
     Y = zeros(M, 1);

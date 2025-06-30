@@ -19,17 +19,9 @@ function phi = base_func(phi_vec, model_id)
 
         case 5 % Gaussian RBFs (centered at -2, 0, 2)
             phi = [phi_vec; make_rbfs(phi_vec, -2:2, 1)];
-            % sigma = 1;
-            % c = [-2, 0, 2];
-            % gaussians = exp(-(x1 - c).^2 / (2*sigma^2));
-            % phi = [gaussians'; phi_vec];
         
         case 6 % Gaussian RBFs (centered at -1, 0, 1)
             phi = [phi_vec; make_rbfs(phi_vec, -1:0.5:1, 0.5)];
-            % sigma = 0.5;
-            % c = [-1, 0, 1]; 
-            % gaussians = exp(-(x1 - c).^2 / (2*sigma^2));
-            % phi = [gaussians'; phi_vec];
 
         case 7 % sinusoidal model
             phi = [sin(phi_vec); cos(phi_vec); phi_vec];

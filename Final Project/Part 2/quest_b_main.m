@@ -1,17 +1,16 @@
-%% Final Model Evaluation on 4 Different Input Signals
+%% Thema 2
+% Quest B: Final Model Evaluation on 4 Different Input Signals
 
-% --- Simulation settings ---
 Tsim = 20;
 Tsampl = 0.001;
 tspan = 0:Tsampl:Tsim;
 x0 = 0;
 dt = Tsampl;
 
-% --- Selected model and regression parameters ---
-model_id = 8;  % Exponential model
-nx = 2; nu = 1;  % Regression order
+% Selected model and regression parameters
+model_id = 8;  
+nx = 2; nu = 1;  
 
-% --- Input signals: from simple to complex ---
 input_signals = {
     @(t) sin(t), @(t) sin(2*t), @(t) make_rbfs(t, 10, 1), @(t) 0.7*sin(t) + 0.3*cos(3*t)
 };
@@ -58,7 +57,7 @@ for i = 1:length(input_signals)
     fprintf('MSE: %.6f\n', mse);
     fprintf('RMSE: %.6f\n', rmse);
 
-% --- Unified Plot: True vs Estimated Derivative + Error ---
+    % True vs Estimated Derivative + Error
     figure;
     
     % Subplot 1: Derivative estimation
